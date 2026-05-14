@@ -75,8 +75,15 @@ Règles impératives :
       .join("");
 
     const clean = text.replace(/```json|```/g, "").trim();
-    const parsed = JSON.parse(clean);
-
+    
+    let parsed;
+    try {
+      parsed = JSON.parse(clean);
+    } catch (parseErr) {
+      console.error("JSON parsing failed. Raw response:", text);
+      return Response.json({ error: "Format de réponse invalide" }, { status: 500 });
+    }
+    
     cache.set(cacheKey, parsed);
     return Response.json(parsed);
   } catch (err) {
