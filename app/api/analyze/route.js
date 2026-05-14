@@ -1,20 +1,20 @@
 import Anthropic from "@anthropic-ai/sdk";
- 
+
 const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
 });
- 
+
 // Cache mémoire simple (sera remplacé par Redis plus tard)
 const cache = new Map();
 const CACHE_TTL_MS = 1000 * 60 * 60 * 24; // 24h
- 
+
 function normalizeMetier(metier) {
   return metier
     .trim()
     .toLowerCase()
     .replace(/\s+/g, " ");
 }
- 
+
 function getCached(key) {
   const entry = cache.get(key);
   if (!entry) return null;
@@ -24,22 +24,22 @@ function getCached(key) {
   }
   return entry.data;
 }
- 
+
 function setCached(key, data) {
   cache.set(key, { data, timestamp: Date.now() });
 }
- 
+
 const SYSTEM_PROMPT = `Tu es un analyste senior spécialisé dans l'impact de l'IA sur les métiers. Tu rédiges pour des actifs français qui veulent un diagnostic lucide, ni alarmiste ni rassuriste, sur l'avenir de leur métier face à l'IA générative et à l'automatisation.
- 
+
 Ton style : ferme, factuel, élégant. Pas de langue de bois, pas de jargon technique. Tu parles à un humain qui prend une décision importante sur sa carrière.
- 
+
 Tu réponds UNIQUEMENT avec un JSON valide, sans texte avant ni après, sans backticks markdown.`;
- 
+
 function buildUserPrompt(metier) {
   return `Métier à analyser : "${metier}"
- 
+
 Génère un diagnostic complet au format JSON strict avec la structure suivante :
- 
+
 {
   "metier_reformule": "Reformulation propre et précise du métier en 3-6 mots (ex: 'Comptable en cabinet d'expertise')",
   
@@ -81,7 +81,7 @@ Génère un diagnostic complet au format JSON strict avec la structure suivante 
   
   "repositionnement_teaser": "Une phrase qui amorce la stratégie de repositionnement à 2-3 ans, sans la révéler. Doit donner envie d'en savoir plus. Ex: 'Votre meilleur atout réside dans X, et c'est précisément là qu'il faut investir.'"
 }
- 
+
 CONTRAINTES IMPORTANTES :
 - "taches_a_risque" : exactement 4 à 6 éléments, triés par niveau_automatisation décroissant
 - "taches_protegees" : exactement 2 à 4 éléments
@@ -96,31 +96,31 @@ CONTRAINTES IMPORTANTES :
 - Le palier doit correspondre exactement à la tranche du score
 - Le verdict_synthetique doit être lucide : pas de "rassurez-vous", pas de "l'IA est une opportunité", ni l'inverse. Du factuel direct.`;
 }
- 
+
 export async function POST(request) {
   try {
     const { metier } = await request.json();
- 
+
     if (!metier || typeof metier !== "string" || metier.trim().length < 2) {
       return Response.json(
         { error: "Métier invalide" },
         { status: 400 }
       );
     }
- 
+
     if (metier.length > 200) {
       return Response.json(
         { error: "Métier trop long (200 caractères max)" },
         { status: 400 }
       );
     }
- 
+
     const cacheKey = normalizeMetier(metier);
     const cached = getCached(cacheKey);
     if (cached) {
       return Response.json({ ...cached, cached: true });
     }
- 
+
     const message = await anthropic.messages.create({
       model: "claude-haiku-4-5-20251001",
       max_tokens: 4000,
@@ -132,12 +132,12 @@ export async function POST(request) {
         },
       ],
     });
- 
+
     const textBlock = message.content.find((b) => b.type === "text");
     if (!textBlock) {
       throw new Error("Pas de réponse texte de l'API");
     }
- 
+
     let parsed;
     try {
       // Nettoyage défensif au cas où le modèle aurait ajouté des backticks
@@ -154,7 +154,7 @@ export async function POST(request) {
         { status: 502 }
       );
     }
- 
+
     // Validation minimale
     if (
       typeof parsed.score_menace !== "number" ||
@@ -166,9 +166,9 @@ export async function POST(request) {
         { status: 502 }
       );
     }
- 
+
     setCached(cacheKey, parsed);
- 
+
     return Response.json({ ...parsed, cached: false });
   } catch (error) {
     console.error("Erreur API analyze:", error);
