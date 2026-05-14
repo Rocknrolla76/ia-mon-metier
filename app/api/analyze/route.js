@@ -9,10 +9,7 @@ const cache = new Map();
 const CACHE_TTL_MS = 1000 * 60 * 60 * 24; // 24h
 
 function normalizeMetier(metier) {
-  return metier
-    .trim()
-    .toLowerCase()
-    .replace(/\s+/g, " ");
+  return metier.trim().toLowerCase().replace(/\s+/g, " ");
 }
 
 function getCached(key) {
@@ -38,63 +35,64 @@ Tu réponds UNIQUEMENT avec un JSON valide, sans texte avant ni après, sans bac
 function buildUserPrompt(metier) {
   return `Métier à analyser : "${metier}"
 
-Génère un diagnostic complet au format JSON strict avec la structure suivante :
+Génère un diagnostic au format JSON strict avec la structure suivante :
 
 {
-  "metier_reformule": "Reformulation propre et précise du métier en 3-6 mots (ex: 'Comptable en cabinet d'expertise')",
-  
+  "metier_reformule": "Reformulation propre et précise du métier en 3-6 mots",
+
   "score_menace": <entier entre 0 et 100>,
-  
+
   "palier": "<un des 5 paliers exacts : 'Métier résilient' | 'Évolution nécessaire' | 'Transformation profonde' | 'Risque élevé' | 'Menace existentielle'>",
-  
-  "verdict_synthetique": "Une phrase choc de 15-25 mots qui résume la situation. Doit être lucide, marquante, mémorable. Pas de cliché, pas de 'l'IA va transformer votre métier'.",
-  
+
+  "verdict_synthetique": "Une phrase choc de 15-25 mots qui résume la situation. Doit être lucide, marquante, mémorable. Pas de cliché.",
+
+  "radar_scores": {
+    "automatisation_taches": <0-100, à quel point les tâches du métier sont automatisables>,
+    "vitesse_changement": <0-100, à quel point la transformation est rapide>,
+    "outils_disponibles": <0-100, maturité des outils IA pour ce métier aujourd'hui>,
+    "concurrence_ia": <0-100, à quel point l'IA peut faire le travail en autonomie>,
+    "barriere_humaine": <0-100, à quel point l'humain reste irremplaçable - SCORE INVERSÉ : 100 = très remplaçable, 0 = totalement irremplaçable>,
+    "pression_marche": <0-100, pression économique pour adopter l'IA dans ce métier>
+  },
+
   "taches_a_risque": [
     {
       "tache": "Description concrète de la tâche en 5-10 mots",
-      "niveau_automatisation": <entier entre 0 et 100, pourcentage automatisable d'ici 3 ans>,
-      "explication": "Une phrase précise sur le pourquoi (sans nommer d'outils spécifiques)"
+      "niveau_automatisation": <entier entre 0 et 100>
     }
   ],
-  
-  "taches_protegees": [
-    {
-      "tache": "Description concrète de la tâche en 5-10 mots",
-      "raison": "Pourquoi cette tâche résiste à l'IA, en une phrase"
-    }
-  ],
-  
+
   "horizon_temporel": {
-    "deja_la": "Ce qui est déjà automatisé/menacé aujourd'hui dans ce métier. 2-3 phrases concrètes.",
-    "un_a_deux_ans": "Ce qui basculera dans les 12-24 prochains mois. 2-3 phrases concrètes.",
-    "trois_a_cinq_ans": "Le visage probable du métier à 3-5 ans. 2-3 phrases."
+    "deja_la": "Une seule phrase punchy (15-25 mots) sur ce qui est déjà automatisé/menacé aujourd'hui.",
+    "un_a_deux_ans": "Une seule phrase punchy (15-25 mots) sur ce qui basculera dans 12-24 mois.",
+    "trois_a_cinq_ans": "Une seule phrase punchy (15-25 mots) sur le visage probable du métier à 3-5 ans."
   },
-  
+
   "plan_action_teaser": [
     {
       "numero": 1,
       "titre": "Titre court de l'action en 4-8 mots",
-      "description": "Description concrète de l'action en 2-3 phrases. Reste général, NE NOMME PAS d'outils ou de logiciels spécifiques. Parle de catégories ('un assistant IA conversationnel', 'un outil d'automatisation de workflows', 'une plateforme d'analyse de données').",
+      "description": "Description concrète de l'action en 2-3 phrases. Reste général, NE NOMME PAS d'outils ou logiciels spécifiques. Parle de catégories ('un assistant IA conversationnel', 'un outil d'automatisation de workflows').",
       "priorite": "<haute | moyenne | basse>"
     }
   ],
-  
-  "repositionnement_teaser": "Une phrase qui amorce la stratégie de repositionnement à 2-3 ans, sans la révéler. Doit donner envie d'en savoir plus. Ex: 'Votre meilleur atout réside dans X, et c'est précisément là qu'il faut investir.'"
+
+  "repositionnement_teaser": "Une phrase qui amorce la stratégie de repositionnement à 2-3 ans, sans la révéler. Doit donner envie d'en savoir plus."
 }
 
 CONTRAINTES IMPORTANTES :
-- "taches_a_risque" : exactement 4 à 6 éléments, triés par niveau_automatisation décroissant
-- "taches_protegees" : exactement 2 à 4 éléments
-- "plan_action_teaser" : exactement 2 actions (les plus impactantes, c'est un teaser)
+- "taches_a_risque" : exactement 4 à 6 éléments, triés par niveau_automatisation décroissant. PAS de champ "explication".
+- "plan_action_teaser" : exactement 1 action (la plus impactante, c'est un teaser)
 - NE JAMAIS nommer d'outils, logiciels ou marques (pas de Claude, ChatGPT, Notion, Make, n8n, Cursor, Zapier, etc.) — uniquement des catégories génériques
+- "horizon_temporel" : chaque période = UNE SEULE phrase courte et incisive
 - Score 0-100 calibré ainsi :
-  * 0-29 : Métier résilient (artisanat de précision, métiers du soin direct, créativité incarnée)
-  * 30-49 : Évolution nécessaire (le métier change mais survit avec adaptation)
-  * 50-69 : Transformation profonde (le périmètre du métier va significativement bouger)
-  * 70-89 : Risque élevé (la majorité des tâches actuelles sont automatisables)
-  * 90-100 : Menace existentielle (le métier sous sa forme actuelle a peu d'avenir)
+  * 0-29 : Métier résilient
+  * 30-49 : Évolution nécessaire
+  * 50-69 : Transformation profonde
+  * 70-89 : Risque élevé
+  * 90-100 : Menace existentielle
 - Le palier doit correspondre exactement à la tranche du score
-- Le verdict_synthetique doit être lucide : pas de "rassurez-vous", pas de "l'IA est une opportunité", ni l'inverse. Du factuel direct.`;
+- "radar_scores" : les 6 valeurs doivent être cohérentes avec le score global. La moyenne approximative des 6 doit être proche du score_menace (à ±10 près).`;
 }
 
 export async function POST(request) {
@@ -102,10 +100,7 @@ export async function POST(request) {
     const { metier } = await request.json();
 
     if (!metier || typeof metier !== "string" || metier.trim().length < 2) {
-      return Response.json(
-        { error: "Métier invalide" },
-        { status: 400 }
-      );
+      return Response.json({ error: "Métier invalide" }, { status: 400 });
     }
 
     if (metier.length > 200) {
@@ -140,7 +135,6 @@ export async function POST(request) {
 
     let parsed;
     try {
-      // Nettoyage défensif au cas où le modèle aurait ajouté des backticks
       const cleaned = textBlock.text
         .replace(/^```json\s*/i, "")
         .replace(/^```\s*/i, "")
@@ -155,7 +149,6 @@ export async function POST(request) {
       );
     }
 
-    // Validation minimale
     if (
       typeof parsed.score_menace !== "number" ||
       parsed.score_menace < 0 ||
