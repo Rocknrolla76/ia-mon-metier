@@ -285,7 +285,6 @@ function Report({ data }) {
         padding: "0 24px 120px",
       }}
     >
-      {/* Section 1 : Score géant */}
       <ScoreSection
         score={data.score_menace}
         palier={data.palier}
@@ -294,22 +293,14 @@ function Report({ data }) {
         gradient={palierColor}
       />
 
-      {/* Section 2 : Tâches à risque vs protégées */}
-      <TachesSection
-        risque={data.taches_a_risque}
-        protegees={data.taches_protegees}
-      />
+      <TachesSection risque={data.taches_a_risque} />
 
-      {/* Section 3 : Horizon temporel */}
       <HorizonSection horizon={data.horizon_temporel} />
 
-      {/* Section 4 : Plan d'action (teaser) */}
       <PlanActionSection actions={data.plan_action_teaser} />
 
-      {/* Section 5 : Repositionnement (verrouillé) */}
       <RepositionnementTeaser teaser={data.repositionnement_teaser} />
 
-      {/* CTA Premium */}
       <PremiumCTA metier={data.metier_reformule} />
     </div>
   );
@@ -392,12 +383,12 @@ function ScoreSection({ score, palier, verdict, metier, gradient }) {
   );
 }
 
-function TachesSection({ risque, protegees }) {
+function TachesSection({ risque }) {
   return (
     <section style={{ padding: "60px 0" }} className="fade-up">
-      <SectionTitle number="01" title="Tâches exposées vs tâches protégées" />
+      <SectionTitle number="01" title="Tâches les plus exposées" />
 
-      <div className="card" style={{ marginBottom: "16px" }}>
+      <div className="card">
         <h3
           style={{
             fontSize: "13px",
@@ -408,13 +399,13 @@ function TachesSection({ risque, protegees }) {
             marginBottom: "20px",
           }}
         >
-          ⚠ Tâches à risque
+          ⚠ Niveau d'automatisation
         </h3>
         {risque.map((t, i) => (
           <div
             key={i}
             style={{
-              padding: i === 0 ? "0 0 20px" : "20px 0",
+              padding: i === 0 ? "0 0 18px" : "18px 0",
               borderTop: i === 0 ? "none" : "1px solid var(--border-subtle)",
             }}
           >
@@ -456,63 +447,30 @@ function TachesSection({ risque, protegees }) {
                 }}
               />
             </div>
-            {t.explication && (
-              <p
-                style={{
-                  fontSize: "14px",
-                  color: "var(--text-secondary)",
-                  marginTop: "10px",
-                  lineHeight: 1.55,
-                }}
-              >
-                {t.explication}
-              </p>
-            )}
           </div>
         ))}
       </div>
 
-      <div className="card">
-        <h3
+      <div
+        style={{
+          marginTop: "16px",
+          padding: "16px 20px",
+          background: "var(--bg-elevated)",
+          border: "1px dashed var(--border-strong)",
+          borderRadius: "12px",
+          textAlign: "center",
+        }}
+      >
+        <p
           style={{
-            fontSize: "13px",
-            fontWeight: 500,
-            color: "#16a34a",
-            textTransform: "uppercase",
-            letterSpacing: "0.08em",
-            marginBottom: "20px",
+            fontSize: "14px",
+            color: "var(--text-secondary)",
+            lineHeight: 1.5,
           }}
         >
-          ✓ Tâches protégées
-        </h3>
-        {protegees.map((t, i) => (
-          <div
-            key={i}
-            style={{
-              padding: i === 0 ? "0 0 16px" : "16px 0",
-              borderTop: i === 0 ? "none" : "1px solid var(--border-subtle)",
-            }}
-          >
-            <p
-              style={{
-                fontSize: "16px",
-                fontWeight: 500,
-                marginBottom: "6px",
-              }}
-            >
-              {t.tache}
-            </p>
-            <p
-              style={{
-                fontSize: "14px",
-                color: "var(--text-secondary)",
-                lineHeight: 1.55,
-              }}
-            >
-              {t.raison}
-            </p>
-          </div>
-        ))}
+          Le rapport complet identifie aussi <strong>les tâches protégées</strong> où
+          vous gardez un avantage durable, et celles à <strong>valoriser dès maintenant</strong>.
+        </p>
       </div>
     </section>
   );
@@ -534,7 +492,7 @@ function HorizonSection({ horizon }) {
           <div
             key={p.key}
             style={{
-              padding: i === 0 ? "0 0 24px" : "24px 0",
+              padding: i === 0 ? "0 0 20px" : "20px 0",
               borderTop: i === 0 ? "none" : "1px solid var(--border-subtle)",
               display: "grid",
               gridTemplateColumns: "120px 1fr",
@@ -566,9 +524,10 @@ function HorizonSection({ horizon }) {
             </div>
             <p
               style={{
-                fontSize: "15px",
-                color: "var(--text-secondary)",
-                lineHeight: 1.65,
+                fontSize: "16px",
+                color: "var(--text-primary)",
+                lineHeight: 1.55,
+                fontWeight: 400,
               }}
             >
               {horizon[p.key]}
@@ -583,7 +542,7 @@ function HorizonSection({ horizon }) {
 function PlanActionSection({ actions }) {
   return (
     <section style={{ padding: "60px 0" }} className="fade-up">
-      <SectionTitle number="03" title="Premières actions à enclencher" />
+      <SectionTitle number="03" title="Première action à enclencher" />
 
       {actions.map((a) => (
         <div
@@ -637,7 +596,6 @@ function PlanActionSection({ actions }) {
               fontSize: "15px",
               color: "var(--text-secondary)",
               lineHeight: 1.65,
-              paddingLeft: "0",
             }}
           >
             {a.description}
@@ -662,8 +620,8 @@ function PlanActionSection({ actions }) {
             marginBottom: "4px",
           }}
         >
-          + 3 autres actions détaillées avec outils précis et prompts prêts à
-          l'emploi
+          + 4 autres actions détaillées avec <strong>outils précis</strong> et{" "}
+          <strong>prompts prêts à l'emploi</strong>
         </p>
         <p
           style={{
@@ -832,7 +790,7 @@ function PremiumCTA({ metier }) {
           }}
         >
           5 actions concrètes avec outils nommés, 3 pivots stratégiques
-          détaillés, roadmap 90 jours et ressources de formation.
+          détaillés, tâches protégées identifiées, roadmap 90 jours.
         </p>
 
         <div
@@ -870,9 +828,8 @@ function PremiumCTA({ metier }) {
             padding: "16px 32px",
           }}
           onClick={() => {
-            // À brancher sur Stripe Checkout dans l'étape suivante
             alert(
-              "Stripe Checkout sera branché à l'étape 3 du projet. Pour l'instant, c'est juste l'UI."
+              "Stripe Checkout sera branché à l'étape suivante. Pour l'instant, c'est juste l'UI."
             );
           }}
         >
@@ -967,15 +924,7 @@ function Spinner() {
         borderRadius: "50%",
         animation: "spin 0.6s linear infinite",
       }}
-    >
-      <style jsx>{`
-        @keyframes spin {
-          to {
-            transform: rotate(360deg);
-          }
-        }
-      `}</style>
-    </span>
+    />
   );
 }
 
