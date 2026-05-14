@@ -1,407 +1,1039 @@
 "use client";
 
-import React, { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 
-export default function App() {
-  const [job, setJob] = useState("");
+export default function Home() {
+  const [metier, setMetier] = useState("");
   const [loading, setLoading] = useState(false);
-  const [report, setReport] = useState(null);
+  const [result, setResult] = useState(null);
   const [error, setError] = useState(null);
+  const resultRef = useRef(null);
 
-  const analyze = async () => {
-    if (!job.trim()) return;
+  useEffect(() => {
+    if (result && resultRef.current) {
+      setTimeout(() => {
+        resultRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
+      }, 100);
+    }
+  }, [result]);
+
+  async function handleSubmit(e) {
+    e.preventDefault();
+    if (!metier.trim() || loading) return;
+
     setLoading(true);
     setError(null);
-    setReport(null);
+    setResult(null);
 
     try {
-      const response = await fetch("/api/analyze", {
+      const res = await fetch("/api/analyze", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ job: job.trim() }),
+        body: JSON.stringify({ metier: metier.trim() }),
       });
 
-      if (!response.ok) {
-        throw new Error("Erreur de l'API");
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.error || "Erreur inconnue");
       }
 
-      const parsed = await response.json();
-      if (parsed.error) throw new Error(parsed.error);
-      setReport(parsed);
+      setResult(data);
     } catch (err) {
-      console.error(err);
-      setError("Désolé, l'analyse a échoué. Réessayez dans un instant.");
+      setError(err.message);
     } finally {
       setLoading(false);
     }
-  };
+  }
 
-  const reset = () => {
-    setReport(null);
-    setJob("");
-    setError(null);
-  };
+  return (
+    <main>
+      <Hero
+        metier={metier}
+        setMetier={setMetier}
+        loading={loading}
+        onSubmit={handleSubmit}
+        hasResult={!!result}
+      />
+      {error && <ErrorMessage message={error} />}
+      {result && (
+        <div ref={resultRef}>
+          <Report data={result} />
+        </div>
+      )}
+      <Footer />
+    </main>
+  );
+}
 
-  const scoreColor = (s) => {
-    if (s <= 3) return "#3d6b4a";
-    if (s <= 6) return "#b8862c";
-    return "#b8312c";
-  };
+function Hero({ metier, setMetier, loading, onSubmit, hasResult }) {
+  return (
+    <section className="hero-bg" style={{ paddingBottom: hasResult ? "80px" : "120px" }}>
+      <nav
+        style={{
+          maxWidth: "1200px",
+          margin: "0 auto",
+          padding: "24px 24px",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          position: "relative",
+          zIndex: 10,
+        }}
+      >
+        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+          <div
+            style={{
+              width: "32px",
+              height: "32px",
+              borderRadius: "8px",
+              background: "linear-gradient(135deg, #ef4444 0%, #f97316 100%)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              fontSize: "16px",
+              fontWeight: 700,
+              color: "white",
+              fontFamily: "var(--font-fraunces)",
+            }}
+          >
+            IA
+          </div>
+          <span
+            style={{
+              fontSize: "15px",
+              fontWeight: 600,
+              letterSpacing: "-0.01em",
+            }}
+          >
+            L'IA & Moi
+          </span>
+        </div>
+      </nav>
 
-  const scoreLabel = (s) => {
-    if (s <= 3) return "Menace contenue";
-    if (s <= 6) return "Transformation majeure";
-    return "Menace critique";
-  };
+      <div
+        style={{
+          maxWidth: "880px",
+          margin: "0 auto",
+          padding: "60px 24px 0",
+          textAlign: "center",
+          position: "relative",
+          zIndex: 5,
+        }}
+      >
+        <div className="fade-up">
+          <span
+            style={{
+              display: "inline-block",
+              padding: "6px 14px",
+              background: "rgba(15, 23, 42, 0.04)",
+              border: "1px solid var(--border-subtle)",
+              borderRadius: "999px",
+              fontSize: "13px",
+              fontWeight: 500,
+              color: "var(--text-secondary)",
+              marginBottom: "32px",
+            }}
+          >
+            Diagnostic gratuit en 30 secondes
+          </span>
+        </div>
+
+        <h1
+          className="fade-up-delay-1"
+          style={{
+            fontSize: "clamp(40px, 6vw, 72px)",
+            lineHeight: 1.05,
+            fontWeight: 700,
+            letterSpacing: "-0.03em",
+            marginBottom: "24px",
+            color: "var(--text-primary)",
+          }}
+        >
+          L'IA va-t-elle{" "}
+          <span
+            style={{
+              background:
+                "linear-gradient(135deg, var(--hero-accent-from) 0%, var(--hero-accent-via) 50%, var(--hero-accent-to) 100%)",
+              WebkitBackgroundClip: "text",
+              WebkitTextFillColor: "transparent",
+              backgroundClip: "text",
+            }}
+          >
+            remplacer
+          </span>
+          <br />
+          votre métier ?
+        </h1>
+
+        <p
+          className="fade-up-delay-2"
+          style={{
+            fontSize: "clamp(17px, 2vw, 20px)",
+            color: "var(--text-secondary)",
+            maxWidth: "580px",
+            margin: "0 auto 48px",
+            lineHeight: 1.5,
+          }}
+        >
+          Saisissez votre métier, recevez un diagnostic lucide et un plan
+          d'action concret pour reprendre la main.
+        </p>
+
+        <form
+          onSubmit={onSubmit}
+          className="fade-up-delay-2"
+          style={{
+            display: "flex",
+            gap: "12px",
+            maxWidth: "520px",
+            margin: "0 auto",
+            flexWrap: "wrap",
+            justifyContent: "center",
+          }}
+        >
+          <input
+            type="text"
+            value={metier}
+            onChange={(e) => setMetier(e.target.value)}
+            placeholder="Ex : comptable, graphiste, professeur…"
+            disabled={loading}
+            style={{
+              flex: "1 1 280px",
+              minWidth: "0",
+              padding: "14px 20px",
+              fontSize: "16px",
+              background: "white",
+              border: "1px solid var(--border-subtle)",
+              borderRadius: "12px",
+              color: "var(--text-primary)",
+              outline: "none",
+              transition: "all 0.2s",
+              boxShadow: "0 1px 3px rgba(0,0,0,0.04)",
+            }}
+            onFocus={(e) => {
+              e.target.style.borderColor = "var(--text-primary)";
+              e.target.style.boxShadow = "0 0 0 3px rgba(15, 23, 42, 0.08)";
+            }}
+            onBlur={(e) => {
+              e.target.style.borderColor = "var(--border-subtle)";
+              e.target.style.boxShadow = "0 1px 3px rgba(0,0,0,0.04)";
+            }}
+            maxLength={200}
+          />
+          <button
+            type="submit"
+            disabled={loading || !metier.trim()}
+            className="btn-primary"
+          >
+            {loading ? (
+              <>
+                <Spinner /> Analyse en cours…
+              </>
+            ) : (
+              <>
+                Analyser mon métier <ArrowRight />
+              </>
+            )}
+          </button>
+        </form>
+
+        {!hasResult && (
+          <p
+            className="fade-up-delay-2"
+            style={{
+              marginTop: "32px",
+              fontSize: "13px",
+              color: "var(--text-tertiary)",
+            }}
+          >
+            Aucune inscription. Aucune carte bancaire. Juste un diagnostic.
+          </p>
+        )}
+      </div>
+    </section>
+  );
+}
+
+function ErrorMessage({ message }) {
+  return (
+    <div
+      style={{
+        maxWidth: "520px",
+        margin: "0 auto",
+        padding: "16px 20px",
+        background: "#fef2f2",
+        border: "1px solid #fecaca",
+        borderRadius: "12px",
+        color: "#991b1b",
+        fontSize: "14px",
+      }}
+    >
+      {message}
+    </div>
+  );
+}
+
+function Report({ data }) {
+  const palierColor = getPalierGradient(data.palier);
 
   return (
     <div
       style={{
-        minHeight: "100vh",
-        background: "#f4f1ea",
-        fontFamily: "'Geist', -apple-system, sans-serif",
-        color: "#1a1a1a",
+        maxWidth: "760px",
+        margin: "0 auto",
+        padding: "0 24px 120px",
       }}
     >
-      <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700;9..144,900&family=Geist:wght@300;400;500;600;700&display=swap');
-        @keyframes fadeUp {
-          from { opacity: 0; transform: translateY(20px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-        @keyframes slideIn {
-          from { opacity: 0; transform: translateX(-10px); }
-          to { opacity: 1; transform: translateX(0); }
-        }
-        @keyframes pulse {
-          0%, 100% { opacity: 0.6; }
-          50% { opacity: 1; }
-        }
-        .fade-in { animation: fadeUp 0.6s ease-out both; }
-        .slide-in { animation: slideIn 0.5s ease-out both; }
-        .grain::before {
-          content: '';
-          position: fixed; inset: 0;
-          background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' /%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.4'/%3E%3C/svg%3E");
-          opacity: 0.08; pointer-events: none; z-index: 1;
-        }
-        .bar-fill { animation: pulse 2s ease-in-out infinite; }
-      `}</style>
+      {/* Section 1 : Score géant */}
+      <ScoreSection
+        score={data.score_menace}
+        palier={data.palier}
+        verdict={data.verdict_synthetique}
+        metier={data.metier_reformule}
+        gradient={palierColor}
+      />
 
-      <div className="grain"></div>
+      {/* Section 2 : Tâches à risque vs protégées */}
+      <TachesSection
+        risque={data.taches_a_risque}
+        protegees={data.taches_protegees}
+      />
 
-      <div style={{ position: "relative", zIndex: 2, maxWidth: "920px", margin: "0 auto", padding: "32px 24px 80px" }}>
-        <header style={{ borderBottom: "1px solid #1a1a1a", paddingBottom: "16px", marginBottom: "48px", display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
-          <div style={{ fontFamily: "'Fraunces', serif", fontWeight: 900, fontSize: "20px", letterSpacing: "-0.02em" }}>
-            L'IA & Moi
-          </div>
-          <div style={{ fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.15em", color: "#666" }}>
-            Édition 2026 · N°1
-          </div>
-        </header>
+      {/* Section 3 : Horizon temporel */}
+      <HorizonSection horizon={data.horizon_temporel} />
 
-        {!report && !loading && (
-          <div className="fade-in">
-            <div style={{ marginBottom: "56px" }}>
-              <div style={{ fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.2em", color: "#b8312c", marginBottom: "20px", fontWeight: 600 }}>
-                Diagnostic personnalisé
-              </div>
-              <h1 style={{
-                fontFamily: "'Fraunces', serif",
-                fontWeight: 500,
-                fontSize: "clamp(40px, 7vw, 72px)",
-                lineHeight: "0.98",
-                letterSpacing: "-0.03em",
-                margin: "0 0 32px",
-              }}>
-                À quel point l'IA<br/>
-                <em style={{ fontStyle: "italic", fontWeight: 400 }}>menace-t-elle</em><br/>
-                votre métier ?
-              </h1>
-              <p style={{ fontSize: "18px", lineHeight: "1.6", maxWidth: "580px", color: "#3a3a3a", margin: "0" }}>
-                Pendant que la majorité attend de voir, une minorité prend de l'avance.
-                En 30 secondes, découvrez les tâches que l'IA est en train d'absorber dans votre profession —
-                et le plan concret pour devenir celui qui l'utilise au lieu de la subir.
-              </p>
-            </div>
+      {/* Section 4 : Plan d'action (teaser) */}
+      <PlanActionSection actions={data.plan_action_teaser} />
 
-            <div style={{
-              background: "#fff",
-              border: "1px solid #1a1a1a",
-              padding: "40px",
-              boxShadow: "8px 8px 0 #1a1a1a",
-            }}>
-              <label style={{ display: "block", fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.2em", marginBottom: "16px", fontWeight: 600 }}>
-                Votre métier
-              </label>
-              <input
-                type="text"
-                value={job}
-                onChange={(e) => setJob(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && analyze()}
-                placeholder="Ex : graphiste, avocat fiscaliste, chef de projet marketing…"
+      {/* Section 5 : Repositionnement (verrouillé) */}
+      <RepositionnementTeaser teaser={data.repositionnement_teaser} />
+
+      {/* CTA Premium */}
+      <PremiumCTA metier={data.metier_reformule} />
+    </div>
+  );
+}
+
+function ScoreSection({ score, palier, verdict, metier, gradient }) {
+  return (
+    <section
+      style={{ padding: "80px 0 60px", textAlign: "center" }}
+      className="fade-up"
+    >
+      <p
+        style={{
+          fontSize: "13px",
+          fontWeight: 500,
+          color: "var(--text-tertiary)",
+          textTransform: "uppercase",
+          letterSpacing: "0.1em",
+          marginBottom: "16px",
+        }}
+      >
+        Diagnostic — {metier}
+      </p>
+
+      <div
+        style={{
+          fontSize: "clamp(140px, 22vw, 240px)",
+          fontWeight: 300,
+          lineHeight: 0.9,
+          fontFamily: "var(--font-fraunces)",
+          background: gradient,
+          WebkitBackgroundClip: "text",
+          WebkitTextFillColor: "transparent",
+          backgroundClip: "text",
+          letterSpacing: "-0.04em",
+          margin: "16px 0",
+        }}
+      >
+        {score}
+      </div>
+
+      <p
+        style={{
+          fontSize: "14px",
+          color: "var(--text-tertiary)",
+          marginBottom: "32px",
+        }}
+      >
+        sur 100 — score de menace IA
+      </p>
+
+      <div
+        style={{
+          display: "inline-block",
+          padding: "8px 20px",
+          background: "var(--bg-card)",
+          border: "1px solid var(--border-subtle)",
+          borderRadius: "999px",
+          fontSize: "14px",
+          fontWeight: 500,
+          color: "var(--text-primary)",
+          marginBottom: "32px",
+        }}
+      >
+        {palier}
+      </div>
+
+      <p
+        className="verdict"
+        style={{
+          fontSize: "clamp(22px, 3vw, 32px)",
+          color: "var(--text-primary)",
+          maxWidth: "640px",
+          margin: "0 auto",
+        }}
+      >
+        « {verdict} »
+      </p>
+    </section>
+  );
+}
+
+function TachesSection({ risque, protegees }) {
+  return (
+    <section style={{ padding: "60px 0" }} className="fade-up">
+      <SectionTitle number="01" title="Tâches exposées vs tâches protégées" />
+
+      <div className="card" style={{ marginBottom: "16px" }}>
+        <h3
+          style={{
+            fontSize: "13px",
+            fontWeight: 500,
+            color: "#dc2626",
+            textTransform: "uppercase",
+            letterSpacing: "0.08em",
+            marginBottom: "20px",
+          }}
+        >
+          ⚠ Tâches à risque
+        </h3>
+        {risque.map((t, i) => (
+          <div
+            key={i}
+            style={{
+              padding: i === 0 ? "0 0 20px" : "20px 0",
+              borderTop: i === 0 ? "none" : "1px solid var(--border-subtle)",
+            }}
+          >
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "baseline",
+                gap: "16px",
+                marginBottom: "8px",
+              }}
+            >
+              <span
                 style={{
-                  width: "100%",
-                  fontSize: "24px",
-                  fontFamily: "'Fraunces', serif",
-                  fontWeight: 400,
-                  padding: "12px 0",
-                  border: "none",
-                  borderBottom: "2px solid #1a1a1a",
-                  background: "transparent",
-                  outline: "none",
-                  marginBottom: "32px",
-                  boxSizing: "border-box",
+                  fontSize: "16px",
+                  fontWeight: 500,
+                  color: "var(--text-primary)",
+                }}
+              >
+                {t.tache}
+              </span>
+              <span
+                style={{
+                  fontSize: "14px",
+                  fontWeight: 600,
+                  color: "#dc2626",
+                  whiteSpace: "nowrap",
+                }}
+              >
+                {t.niveau_automatisation}%
+              </span>
+            </div>
+            <div className="progress-bar">
+              <div
+                className="progress-bar-fill"
+                style={{
+                  width: `${t.niveau_automatisation}%`,
+                  background: "linear-gradient(90deg, #ef4444 0%, #dc2626 100%)",
                 }}
               />
-              <button
-                onClick={analyze}
-                disabled={loading || !job.trim()}
+            </div>
+            {t.explication && (
+              <p
                 style={{
-                  background: loading || !job.trim() ? "#999" : "#1a1a1a",
-                  color: "#f4f1ea",
-                  border: "none",
-                  padding: "18px 36px",
+                  fontSize: "14px",
+                  color: "var(--text-secondary)",
+                  marginTop: "10px",
+                  lineHeight: 1.55,
+                }}
+              >
+                {t.explication}
+              </p>
+            )}
+          </div>
+        ))}
+      </div>
+
+      <div className="card">
+        <h3
+          style={{
+            fontSize: "13px",
+            fontWeight: 500,
+            color: "#16a34a",
+            textTransform: "uppercase",
+            letterSpacing: "0.08em",
+            marginBottom: "20px",
+          }}
+        >
+          ✓ Tâches protégées
+        </h3>
+        {protegees.map((t, i) => (
+          <div
+            key={i}
+            style={{
+              padding: i === 0 ? "0 0 16px" : "16px 0",
+              borderTop: i === 0 ? "none" : "1px solid var(--border-subtle)",
+            }}
+          >
+            <p
+              style={{
+                fontSize: "16px",
+                fontWeight: 500,
+                marginBottom: "6px",
+              }}
+            >
+              {t.tache}
+            </p>
+            <p
+              style={{
+                fontSize: "14px",
+                color: "var(--text-secondary)",
+                lineHeight: 1.55,
+              }}
+            >
+              {t.raison}
+            </p>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function HorizonSection({ horizon }) {
+  const periods = [
+    { label: "Déjà là", key: "deja_la", color: "#dc2626" },
+    { label: "1 à 2 ans", key: "un_a_deux_ans", color: "#f59e0b" },
+    { label: "3 à 5 ans", key: "trois_a_cinq_ans", color: "#3b82f6" },
+  ];
+
+  return (
+    <section style={{ padding: "60px 0" }} className="fade-up">
+      <SectionTitle number="02" title="Horizon temporel" />
+
+      <div className="card">
+        {periods.map((p, i) => (
+          <div
+            key={p.key}
+            style={{
+              padding: i === 0 ? "0 0 24px" : "24px 0",
+              borderTop: i === 0 ? "none" : "1px solid var(--border-subtle)",
+              display: "grid",
+              gridTemplateColumns: "120px 1fr",
+              gap: "20px",
+              alignItems: "start",
+            }}
+          >
+            <div>
+              <div
+                style={{
+                  width: "8px",
+                  height: "8px",
+                  borderRadius: "50%",
+                  background: p.color,
+                  marginBottom: "8px",
+                }}
+              />
+              <p
+                style={{
                   fontSize: "13px",
                   fontWeight: 600,
-                  letterSpacing: "0.15em",
+                  color: "var(--text-primary)",
                   textTransform: "uppercase",
-                  cursor: loading || !job.trim() ? "not-allowed" : "pointer",
-                  fontFamily: "inherit",
-                  transition: "transform 0.2s",
+                  letterSpacing: "0.05em",
                 }}
               >
-                {loading ? "Analyse en cours…" : "Lancer le diagnostic →"}
-              </button>
-            </div>
-
-            {error && (
-              <div style={{ marginTop: "24px", padding: "16px", background: "#fbe9e7", border: "1px solid #b8312c", color: "#b8312c" }}>
-                {error}
-              </div>
-            )}
-
-            <div style={{ marginTop: "48px", display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: "24px", paddingTop: "32px", borderTop: "1px solid #d4cfc4" }}>
-              {[
-                { n: "01", t: "Diagnostic spécifique", d: "Analyse adaptée à votre métier précis" },
-                { n: "02", t: "Plan d'action concret", d: "Des outils nommés, pas de blabla" },
-                { n: "03", t: "Stratégie de repositionnement", d: "Comment évoluer dans 2-3 ans" },
-              ].map((item, i) => (
-                <div key={i}>
-                  <div style={{ fontFamily: "'Fraunces', serif", fontSize: "32px", fontWeight: 300, color: "#b8312c", marginBottom: "8px" }}>{item.n}</div>
-                  <div style={{ fontWeight: 600, fontSize: "14px", marginBottom: "4px" }}>{item.t}</div>
-                  <div style={{ fontSize: "13px", color: "#666", lineHeight: "1.5" }}>{item.d}</div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {loading && (
-          <div className="fade-in" style={{ textAlign: "center", padding: "80px 0" }}>
-            <div className="bar-fill" style={{ fontFamily: "'Fraunces', serif", fontSize: "32px", fontWeight: 400, fontStyle: "italic" }}>
-              Analyse en cours…
-            </div>
-            <div style={{ marginTop: "16px", color: "#666", fontSize: "14px" }}>
-              Décortique les tâches de "{job}" face à l'IA générative
-            </div>
-          </div>
-        )}
-
-        {report && (
-          <div className="fade-in">
-            <div style={{ fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.2em", color: "#666", marginBottom: "8px" }}>
-              Diagnostic IA · {report.metier_reformule}
-            </div>
-
-            <div style={{ display: "flex", alignItems: "flex-end", gap: "32px", flexWrap: "wrap", marginBottom: "16px", paddingBottom: "32px", borderBottom: "1px solid #1a1a1a" }}>
-              <div>
-                <div style={{
-                  fontFamily: "'Fraunces', serif",
-                  fontSize: "clamp(120px, 22vw, 200px)",
-                  fontWeight: 500,
-                  lineHeight: "0.85",
-                  color: scoreColor(report.score_menace),
-                  letterSpacing: "-0.05em",
-                }}>
-                  {report.score_menace}
-                  <span style={{ fontSize: "0.3em", color: "#999", fontWeight: 300 }}>/10</span>
-                </div>
-              </div>
-              <div style={{ flex: 1, minWidth: "240px", paddingBottom: "16px" }}>
-                <div style={{
-                  display: "inline-block",
-                  background: scoreColor(report.score_menace),
-                  color: "#fff",
-                  padding: "4px 12px",
-                  fontSize: "11px",
-                  textTransform: "uppercase",
-                  letterSpacing: "0.15em",
-                  fontWeight: 600,
-                  marginBottom: "16px",
-                }}>
-                  {scoreLabel(report.score_menace)}
-                </div>
-                <div style={{
-                  fontFamily: "'Fraunces', serif",
-                  fontSize: "clamp(22px, 2.5vw, 28px)",
-                  fontWeight: 500,
-                  lineHeight: "1.3",
-                  fontStyle: "italic",
-                }}>
-                  "{report.verdict_synthetique}"
-                </div>
-              </div>
-            </div>
-
-            <section style={{ marginTop: "64px" }}>
-              <SectionTitle num="01" title="Ce que l'IA absorbe / ce qui vous reste" />
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "32px", marginTop: "32px" }}>
-                <div>
-                  <div style={{ fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.2em", color: "#b8312c", marginBottom: "16px", fontWeight: 600 }}>
-                    ⚠ Tâches en zone rouge
-                  </div>
-                  {report.taches_a_risque.map((t, i) => (
-                    <div key={i} className="slide-in" style={{ marginBottom: "24px", animationDelay: `${i * 0.08}s` }}>
-                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: "6px" }}>
-                        <div style={{ fontWeight: 600, fontSize: "15px" }}>{t.tache}</div>
-                        <div style={{ fontFamily: "'Fraunces', serif", fontSize: "20px", color: "#b8312c", fontWeight: 500 }}>{t.niveau_automatisation}%</div>
-                      </div>
-                      <div style={{ height: "3px", background: "#e5dfd2", marginBottom: "8px" }}>
-                        <div style={{ height: "100%", background: "#b8312c", width: `${t.niveau_automatisation}%` }}></div>
-                      </div>
-                      <div style={{ fontSize: "13px", color: "#666", lineHeight: "1.5" }}>{t.explication}</div>
-                    </div>
-                  ))}
-                </div>
-                <div>
-                  <div style={{ fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.2em", color: "#3d6b4a", marginBottom: "16px", fontWeight: 600 }}>
-                    ✓ Votre forteresse
-                  </div>
-                  {report.taches_protegees.map((t, i) => (
-                    <div key={i} className="slide-in" style={{ marginBottom: "20px", padding: "16px", background: "#fff", borderLeft: "3px solid #3d6b4a", animationDelay: `${i * 0.08}s` }}>
-                      <div style={{ fontWeight: 600, fontSize: "15px", marginBottom: "6px" }}>{t.tache}</div>
-                      <div style={{ fontSize: "13px", color: "#666", lineHeight: "1.5" }}>{t.raison}</div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </section>
-
-            <section style={{ marginTop: "80px" }}>
-              <SectionTitle num="02" title="La ligne du temps" />
-              <div style={{ marginTop: "32px", borderTop: "2px solid #1a1a1a" }}>
-                {[
-                  { label: "Déjà là", color: "#b8312c", content: report.horizon_temporel.deja_la },
-                  { label: "1 — 2 ans", color: "#b8862c", content: report.horizon_temporel.court_terme },
-                  { label: "3 — 5 ans", color: "#3d6b4a", content: report.horizon_temporel.moyen_terme },
-                ].map((h, i) => (
-                  <div key={i} className="slide-in" style={{ display: "grid", gridTemplateColumns: "180px 1fr", gap: "24px", padding: "24px 0", borderBottom: "1px solid #d4cfc4", animationDelay: `${i * 0.1}s` }}>
-                    <div>
-                      <div style={{ width: "10px", height: "10px", borderRadius: "50%", background: h.color, marginBottom: "8px" }}></div>
-                      <div style={{ fontFamily: "'Fraunces', serif", fontSize: "22px", fontWeight: 500 }}>{h.label}</div>
-                    </div>
-                    <div style={{ fontSize: "15px", lineHeight: "1.6" }}>{h.content}</div>
-                  </div>
-                ))}
-              </div>
-            </section>
-
-            <section style={{ marginTop: "80px" }}>
-              <SectionTitle num="03" title="Votre plan d'action" />
-              <div style={{ marginTop: "32px" }}>
-                {report.plan_action.map((a, i) => (
-                  <div key={i} className="slide-in" style={{
-                    background: "#fff",
-                    border: "1px solid #1a1a1a",
-                    padding: "24px 28px",
-                    marginBottom: "16px",
-                    display: "grid",
-                    gridTemplateColumns: "60px 1fr auto",
-                    gap: "20px",
-                    alignItems: "start",
-                    animationDelay: `${i * 0.1}s`,
-                  }}>
-                    <div style={{ fontFamily: "'Fraunces', serif", fontSize: "42px", fontWeight: 400, color: "#b8312c", lineHeight: "1" }}>
-                      {String(i + 1).padStart(2, "0")}
-                    </div>
-                    <div>
-                      <div style={{ fontWeight: 600, fontSize: "17px", marginBottom: "6px" }}>{a.titre}</div>
-                      <div style={{ fontSize: "14px", color: "#444", lineHeight: "1.6" }}>{a.description}</div>
-                    </div>
-                    <div style={{
-                      fontSize: "10px",
-                      textTransform: "uppercase",
-                      letterSpacing: "0.15em",
-                      padding: "4px 10px",
-                      background: a.priorite === "haute" ? "#b8312c" : a.priorite === "moyenne" ? "#b8862c" : "#666",
-                      color: "#fff",
-                      fontWeight: 600,
-                      whiteSpace: "nowrap",
-                    }}>
-                      {a.priorite}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </section>
-
-            <section style={{ marginTop: "80px", padding: "48px", background: "#1a1a1a", color: "#f4f1ea" }}>
-              <div style={{ fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.2em", color: "#b8862c", marginBottom: "16px", fontWeight: 600 }}>
-                Horizon 2-3 ans
-              </div>
-              <h2 style={{ fontFamily: "'Fraunces', serif", fontSize: "clamp(28px, 4vw, 42px)", fontWeight: 400, fontStyle: "italic", lineHeight: "1.2", margin: "0 0 24px" }}>
-                Vers où vous repositionner ?
-              </h2>
-              <p style={{ fontSize: "18px", lineHeight: "1.7", margin: 0 }}>
-                {report.repositionnement}
+                {p.label}
               </p>
-            </section>
+            </div>
+            <p
+              style={{
+                fontSize: "15px",
+                color: "var(--text-secondary)",
+                lineHeight: 1.65,
+              }}
+            >
+              {horizon[p.key]}
+            </p>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
 
-            <div style={{ marginTop: "64px", paddingTop: "32px", borderTop: "1px solid #1a1a1a", display: "flex", gap: "16px", flexWrap: "wrap", justifyContent: "space-between", alignItems: "center" }}>
-              <div style={{ fontSize: "13px", color: "#666" }}>
-                Mon métier est menacé à <strong style={{ color: scoreColor(report.score_menace) }}>{report.score_menace}/10</strong> — partagez le diagnostic.
-              </div>
-              <button
-                onClick={reset}
+function PlanActionSection({ actions }) {
+  return (
+    <section style={{ padding: "60px 0" }} className="fade-up">
+      <SectionTitle number="03" title="Premières actions à enclencher" />
+
+      {actions.map((a) => (
+        <div
+          key={a.numero}
+          className="card"
+          style={{ marginBottom: "16px", position: "relative" }}
+        >
+          <div
+            style={{
+              display: "flex",
+              alignItems: "baseline",
+              gap: "16px",
+              marginBottom: "12px",
+            }}
+          >
+            <span
+              style={{
+                fontSize: "32px",
+                fontWeight: 300,
+                color: "var(--text-tertiary)",
+                fontFamily: "var(--font-fraunces)",
+                lineHeight: 1,
+              }}
+            >
+              {String(a.numero).padStart(2, "0")}
+            </span>
+            <div style={{ flex: 1 }}>
+              <div
                 style={{
-                  background: "transparent",
-                  color: "#1a1a1a",
-                  border: "1px solid #1a1a1a",
-                  padding: "14px 28px",
-                  fontSize: "12px",
-                  fontWeight: 600,
-                  letterSpacing: "0.15em",
-                  textTransform: "uppercase",
-                  cursor: "pointer",
-                  fontFamily: "inherit",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "12px",
+                  flexWrap: "wrap",
                 }}
               >
-                Tester un autre métier
-              </button>
+                <h3
+                  style={{
+                    fontSize: "18px",
+                    fontWeight: 600,
+                    color: "var(--text-primary)",
+                  }}
+                >
+                  {a.titre}
+                </h3>
+                <PriorityBadge priority={a.priorite} />
+              </div>
             </div>
           </div>
-        )}
+          <p
+            style={{
+              fontSize: "15px",
+              color: "var(--text-secondary)",
+              lineHeight: 1.65,
+              paddingLeft: "0",
+            }}
+          >
+            {a.description}
+          </p>
+        </div>
+      ))}
+
+      <div
+        style={{
+          marginTop: "24px",
+          padding: "20px 24px",
+          background: "var(--bg-elevated)",
+          border: "1px dashed var(--border-strong)",
+          borderRadius: "12px",
+          textAlign: "center",
+        }}
+      >
+        <p
+          style={{
+            fontSize: "14px",
+            color: "var(--text-secondary)",
+            marginBottom: "4px",
+          }}
+        >
+          + 3 autres actions détaillées avec outils précis et prompts prêts à
+          l'emploi
+        </p>
+        <p
+          style={{
+            fontSize: "13px",
+            color: "var(--text-tertiary)",
+          }}
+        >
+          dans le rapport complet ↓
+        </p>
+      </div>
+    </section>
+  );
+}
+
+function RepositionnementTeaser({ teaser }) {
+  return (
+    <section style={{ padding: "60px 0" }} className="fade-up">
+      <SectionTitle number="04" title="Repositionnement stratégique 2-3 ans" />
+
+      <div className="card locked-section" style={{ minHeight: "280px" }}>
+        <div className="locked-content">
+          <p
+            style={{
+              fontSize: "16px",
+              color: "var(--text-secondary)",
+              lineHeight: 1.7,
+              marginBottom: "20px",
+            }}
+          >
+            {teaser}
+          </p>
+          <p
+            style={{
+              fontSize: "14px",
+              color: "var(--text-tertiary)",
+              lineHeight: 1.6,
+              fontStyle: "italic",
+            }}
+          >
+            Pivot 1 — Spécialisation verticale dans les domaines où l'expertise
+            humaine reste irremplaçable, en s'appuyant sur les outils d'IA comme
+            multiplicateurs de productivité...
+          </p>
+          <p
+            style={{
+              fontSize: "14px",
+              color: "var(--text-tertiary)",
+              lineHeight: 1.6,
+              fontStyle: "italic",
+              marginTop: "12px",
+            }}
+          >
+            Pivot 2 — Évolution vers un rôle de superviseur des outils IA dans
+            votre domaine, avec un positionnement de garant de la qualité et de
+            l'éthique...
+          </p>
+        </div>
+        <div className="locked-overlay">
+          <div style={{ textAlign: "center", padding: "20px" }}>
+            <div
+              style={{
+                width: "48px",
+                height: "48px",
+                margin: "0 auto 16px",
+                background: "var(--bg-card)",
+                border: "1px solid var(--border-subtle)",
+                borderRadius: "12px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                fontSize: "20px",
+              }}
+            >
+              🔒
+            </div>
+            <p
+              style={{
+                fontSize: "16px",
+                fontWeight: 600,
+                color: "var(--text-primary)",
+                marginBottom: "8px",
+              }}
+            >
+              Stratégie complète dans le rapport premium
+            </p>
+            <p
+              style={{
+                fontSize: "14px",
+                color: "var(--text-secondary)",
+                maxWidth: "400px",
+              }}
+            >
+              3 pivots de repositionnement détaillés, adaptés à votre métier.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function PremiumCTA({ metier }) {
+  return (
+    <section style={{ padding: "60px 0 0" }} className="fade-up">
+      <div
+        style={{
+          background: "linear-gradient(135deg, #0f172a 0%, #1e293b 100%)",
+          borderRadius: "20px",
+          padding: "48px 40px",
+          color: "white",
+          textAlign: "center",
+          position: "relative",
+          overflow: "hidden",
+        }}
+      >
+        <div
+          style={{
+            position: "absolute",
+            top: "-50%",
+            right: "-20%",
+            width: "500px",
+            height: "500px",
+            background:
+              "radial-gradient(circle, rgba(239,68,68,0.15) 0%, transparent 70%)",
+            pointerEvents: "none",
+          }}
+        />
+
+        <p
+          style={{
+            fontSize: "13px",
+            fontWeight: 500,
+            color: "#94a3b8",
+            textTransform: "uppercase",
+            letterSpacing: "0.1em",
+            marginBottom: "16px",
+            position: "relative",
+          }}
+        >
+          Rapport complet — {metier}
+        </p>
+
+        <h2
+          style={{
+            fontSize: "clamp(28px, 4vw, 40px)",
+            fontWeight: 700,
+            letterSpacing: "-0.02em",
+            lineHeight: 1.15,
+            marginBottom: "20px",
+            position: "relative",
+          }}
+        >
+          Le plan d'action complet pour
+          <br />
+          reprendre la main sur votre métier.
+        </h2>
+
+        <p
+          style={{
+            fontSize: "16px",
+            color: "#cbd5e1",
+            maxWidth: "520px",
+            margin: "0 auto 32px",
+            lineHeight: 1.6,
+            position: "relative",
+          }}
+        >
+          5 actions concrètes avec outils nommés, 3 pivots stratégiques
+          détaillés, roadmap 90 jours et ressources de formation.
+        </p>
+
+        <div
+          style={{
+            display: "flex",
+            alignItems: "baseline",
+            justifyContent: "center",
+            gap: "8px",
+            marginBottom: "28px",
+            position: "relative",
+          }}
+        >
+          <span
+            style={{
+              fontSize: "48px",
+              fontWeight: 700,
+              fontFamily: "var(--font-fraunces)",
+              letterSpacing: "-0.02em",
+            }}
+          >
+            39€
+          </span>
+          <span style={{ fontSize: "14px", color: "#94a3b8" }}>
+            paiement unique
+          </span>
+        </div>
+
+        <button
+          className="btn-primary"
+          style={{
+            background: "white",
+            color: "#0f172a",
+            position: "relative",
+            fontSize: "16px",
+            padding: "16px 32px",
+          }}
+          onClick={() => {
+            // À brancher sur Stripe Checkout dans l'étape suivante
+            alert(
+              "Stripe Checkout sera branché à l'étape 3 du projet. Pour l'instant, c'est juste l'UI."
+            );
+          }}
+        >
+          Recevoir le rapport complet
+          <ArrowRight />
+        </button>
+
+        <p
+          style={{
+            marginTop: "24px",
+            fontSize: "12px",
+            color: "#64748b",
+            position: "relative",
+          }}
+        >
+          PDF téléchargeable • Reçu par email en 2 min
+        </p>
+      </div>
+    </section>
+  );
+}
+
+function SectionTitle({ number, title }) {
+  return (
+    <div style={{ marginBottom: "24px" }}>
+      <div
+        style={{
+          display: "flex",
+          alignItems: "baseline",
+          gap: "12px",
+        }}
+      >
+        <span
+          style={{
+            fontSize: "13px",
+            fontWeight: 500,
+            color: "var(--text-tertiary)",
+            fontVariantNumeric: "tabular-nums",
+          }}
+        >
+          {number}
+        </span>
+        <h2
+          style={{
+            fontSize: "22px",
+            fontWeight: 600,
+            letterSpacing: "-0.02em",
+            color: "var(--text-primary)",
+          }}
+        >
+          {title}
+        </h2>
       </div>
     </div>
   );
 }
 
-function SectionTitle({ num, title }) {
+function PriorityBadge({ priority }) {
+  const config = {
+    haute: { bg: "#fef2f2", color: "#991b1b", label: "Priorité haute" },
+    moyenne: { bg: "#fef9c3", color: "#854d0e", label: "Priorité moyenne" },
+    basse: { bg: "#f0fdf4", color: "#166534", label: "Priorité basse" },
+  };
+  const c = config[priority] || config.moyenne;
   return (
-    <div style={{ display: "flex", alignItems: "baseline", gap: "20px", borderBottom: "1px solid #d4cfc4", paddingBottom: "12px" }}>
-      <div style={{ fontFamily: "'Fraunces', serif", fontSize: "14px", color: "#b8312c", fontWeight: 600, letterSpacing: "0.1em" }}>
-        {num}
-      </div>
-      <h2 style={{
-        fontFamily: "'Fraunces', serif",
-        fontSize: "clamp(26px, 3.5vw, 36px)",
-        fontWeight: 500,
-        margin: 0,
-        letterSpacing: "-0.02em",
-      }}>
-        {title}
-      </h2>
-    </div>
+    <span
+      style={{
+        fontSize: "11px",
+        fontWeight: 600,
+        padding: "3px 10px",
+        background: c.bg,
+        color: c.color,
+        borderRadius: "999px",
+        textTransform: "uppercase",
+        letterSpacing: "0.05em",
+      }}
+    >
+      {c.label}
+    </span>
+  );
+}
+
+function Spinner() {
+  return (
+    <span
+      style={{
+        display: "inline-block",
+        width: "14px",
+        height: "14px",
+        border: "2px solid rgba(255,255,255,0.3)",
+        borderTopColor: "white",
+        borderRadius: "50%",
+        animation: "spin 0.6s linear infinite",
+      }}
+    >
+      <style jsx>{`
+        @keyframes spin {
+          to {
+            transform: rotate(360deg);
+          }
+        }
+      `}</style>
+    </span>
+  );
+}
+
+function ArrowRight() {
+  return (
+    <svg
+      width="14"
+      height="14"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <line x1="5" y1="12" x2="19" y2="12" />
+      <polyline points="12 5 19 12 12 19" />
+    </svg>
+  );
+}
+
+function Footer() {
+  return (
+    <footer
+      style={{
+        borderTop: "1px solid var(--border-subtle)",
+        padding: "32px 24px",
+        textAlign: "center",
+        background: "var(--bg-card)",
+      }}
+    >
+      <p
+        style={{
+          fontSize: "13px",
+          color: "var(--text-tertiary)",
+        }}
+      >
+        L'IA & Moi — Diagnostic métier face à l'IA · 2026
+      </p>
+    </footer>
+  );
+}
+
+function getPalierGradient(palier) {
+  const map = {
+    "Métier résilient":
+      "linear-gradient(135deg, var(--score-resilient-from) 0%, var(--score-resilient-to) 100%)",
+    "Évolution nécessaire":
+      "linear-gradient(135deg, var(--score-evolution-from) 0%, var(--score-evolution-to) 100%)",
+    "Transformation profonde":
+      "linear-gradient(135deg, var(--score-transformation-from) 0%, var(--score-transformation-to) 100%)",
+    "Risque élevé":
+      "linear-gradient(135deg, var(--score-risque-from) 0%, var(--score-risque-to) 100%)",
+    "Menace existentielle":
+      "linear-gradient(135deg, var(--score-existentielle-from) 0%, var(--score-existentielle-to) 100%)",
+  };
+  return (
+    map[palier] ||
+    "linear-gradient(135deg, var(--text-primary) 0%, var(--text-secondary) 100%)"
   );
 }
