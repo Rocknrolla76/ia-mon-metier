@@ -109,19 +109,30 @@ export default function PremiumReportView({ purchase }) {
         </div>
       </section>
 
-    
-
-      <section className="premium-section">
+     <section className="premium-section">
         <h2>Tâches protégées — votre socle</h2>
-        <p className="section-intro">Ce que l'IA ne peut pas remplacer (pour l'instant) dans votre métier.</p>
+        {r.taches_protegees_intro && (
+          <p className="section-intro">{r.taches_protegees_intro}</p>
+        )}
         <div className="protected-list">
           {r.taches_protegees.map((t, i) => (
             <div key={i} className="protected-card">
               <h3>✓ {t.tache}</h3>
               <p>{t.raison}</p>
+              {t.conseil_valorisation && (
+                <p className="protected-advice">
+                  <strong>💡 Comment la valoriser : </strong>
+                  {t.conseil_valorisation}
+                </p>
+              )}
             </div>
           ))}
         </div>
+        {r.taches_protegees_conclusion && (
+          <div className="protected-conclusion">
+            <p>{r.taches_protegees_conclusion}</p>
+          </div>
+        )}
       </section>
 
       <section className="premium-section">
