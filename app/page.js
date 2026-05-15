@@ -2,10 +2,11 @@
 
 import { useState, useRef, useEffect } from "react";
 
+// Dans le composant parent
 const [generatingPremium, setGeneratingPremium] = useState(false);
 
 const handleSimulatePurchase = async () => {
-  if (!metier) return; // metier = state qui contient le métier saisi
+  if (!metier) return;
   setGeneratingPremium(true);
   try {
     const res = await fetch("/api/premium-generate", {
@@ -18,13 +19,21 @@ const handleSimulatePurchase = async () => {
       window.location.href = `/rapport/${data.purchase_id}`;
     } else {
       alert("Erreur de génération. Réessaie.");
+      setGeneratingPremium(false);
     }
   } catch {
     alert("Erreur réseau. Réessaie.");
-  } finally {
     setGeneratingPremium(false);
   }
 };
+
+// ...
+
+<PremiumCTA
+  metier={metier}
+  onPurchase={handleSimulatePurchase}
+  loading={generatingPremium}
+/>
 
 
 export default function Home() {
@@ -748,7 +757,7 @@ function RepositionnementTeaser({ teaser }) {
   );
 }
 
-function PremiumCTA({ metier }) {
+function PremiumCTA({ metier, onPurchase, loading }) {
   return (
     <section style={{ padding: "60px 0 0" }} className="fade-up">
       <div
@@ -852,8 +861,8 @@ function PremiumCTA({ metier }) {
             fontSize: "16px",
             padding: "16px 32px",
           }}
-          onClick={handleSimulatePurchase}
-          disabled={generatingPremium}
+          onClick={onPurchase}
+          disabled={loading}
         >
             {generatingPremium ? "Génération du rapport…" : "Recevoir le rapport complet · 39€"}
         </button>
