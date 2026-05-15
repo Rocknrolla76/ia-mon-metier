@@ -2,31 +2,6 @@
 
 import { useState, useRef, useEffect } from "react";
 
-// Dans le composant parent
-const [generatingPremium, setGeneratingPremium] = useState(false);
-
-const handleSimulatePurchase = async () => {
-  if (!metier) return;
-  setGeneratingPremium(true);
-  try {
-    const res = await fetch("/api/premium-generate", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ metier }),
-    });
-    const data = await res.json();
-    if (data.purchase_id) {
-      window.location.href = `/rapport/${data.purchase_id}`;
-    } else {
-      alert("Erreur de génération. Réessaie.");
-      setGeneratingPremium(false);
-    }
-  } catch {
-    alert("Erreur réseau. Réessaie.");
-    setGeneratingPremium(false);
-  }
-};
-
 // ...
 
 <PremiumCTA
@@ -757,7 +732,31 @@ function RepositionnementTeaser({ teaser }) {
   );
 }
 
-function PremiumCTA({ metier, onPurchase, loading }) {
+function PremiumCTA({ metier }) {
+  const [generatingPremium, setGeneratingPremium] = useState(false);
+
+  const handleSimulatePurchase = async () => {
+    if (!metier) return;
+    setGeneratingPremium(true);
+    try {
+      const res = await fetch("/api/premium-generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ metier }),
+      });
+      const data = await res.json();
+      if (data.purchase_id) {
+        window.location.href = `/rapport/${data.purchase_id}`;
+      } else {
+        alert("Erreur de génération. Réessaie.");
+        setGeneratingPremium(false);
+      }
+    } catch {
+      alert("Erreur réseau. Réessaie.");
+      setGeneratingPremium(false);
+    }
+  };
+
   return (
     <section style={{ padding: "60px 0 0" }} className="fade-up">
       <div
@@ -783,7 +782,6 @@ function PremiumCTA({ metier, onPurchase, loading }) {
             pointerEvents: "none",
           }}
         />
-
         <p
           style={{
             fontSize: "13px",
@@ -797,7 +795,6 @@ function PremiumCTA({ metier, onPurchase, loading }) {
         >
           Rapport complet — {metier}
         </p>
-
         <h2
           style={{
             fontSize: "clamp(28px, 4vw, 40px)",
@@ -812,7 +809,6 @@ function PremiumCTA({ metier, onPurchase, loading }) {
           <br />
           reprendre la main sur votre métier.
         </h2>
-
         <p
           style={{
             fontSize: "16px",
@@ -826,7 +822,6 @@ function PremiumCTA({ metier, onPurchase, loading }) {
           5 actions concrètes avec outils nommés, 3 pivots stratégiques
           détaillés, tâches protégées identifiées, roadmap 90 jours.
         </p>
-
         <div
           style={{
             display: "flex",
@@ -851,7 +846,6 @@ function PremiumCTA({ metier, onPurchase, loading }) {
             paiement unique
           </span>
         </div>
-
         <button
           className="btn-primary"
           style={{
@@ -861,12 +855,11 @@ function PremiumCTA({ metier, onPurchase, loading }) {
             fontSize: "16px",
             padding: "16px 32px",
           }}
-          onClick={onPurchase}
-          disabled={loading}
+          onClick={handleSimulatePurchase}
+          disabled={generatingPremium}
         >
-            {generatingPremium ? "Génération du rapport…" : "Recevoir le rapport complet · 39€"}
+          {generatingPremium ? "Génération du rapport…" : "Recevoir le rapport complet · 39€"}
         </button>
-
         <p
           style={{
             marginTop: "24px",
