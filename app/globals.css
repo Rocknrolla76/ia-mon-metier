@@ -611,16 +611,56 @@ a {
   max-width: 480px;
   height: auto;
 }
-.radar-legend {
+.radar-intro {
   text-align: center;
   font-size: 14px;
   color: #64748b;
   font-style: italic;
   max-width: 480px;
-  margin: 8px 0 0;
+  margin: 12px 0 32px;
   line-height: 1.5;
 }
-@media (max-width: 600px) {
+.radar-legend-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+  width: 100%;
+  max-width: 700px;
+}
+.radar-legend-item {
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 14px 16px;
+}
+.radar-legend-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 6px;
+  gap: 12px;
+}
+.radar-legend-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: #0f172a;
+}
+.radar-legend-score {
+  font-size: 18px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.radar-legend-text {
+  font-size: 13px;
+  color: #64748b;
+  line-height: 1.5;
+  margin: 0;
+}
+@media (max-width: 700px) {
+  .radar-legend-grid {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
   .radar-svg { max-width: 100%; }
   .radar-svg text { font-size: 10px; }
 }
