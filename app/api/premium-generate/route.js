@@ -13,22 +13,25 @@ const supabase = createClient(
   { auth: { persistSession: false } }
 );
 
-const PREMIUM_PROMPT = `Tu es un consultant senior spécialisé dans l'impact de l'IA sur les métiers. Tu rédiges un rapport stratégique premium pour un professionnel qui veut comprendre précisément comment l'IA va transformer son métier et comment se repositionner pour rester indispensable.
+// =========================
+// PROMPT 1 — Diagnostic
+// =========================
+const PROMPT_DIAGNOSTIC = `Tu es un consultant senior spécialisé dans l'impact de l'IA sur les métiers. Tu rédiges la PARTIE DIAGNOSTIC d'un rapport premium (39€).
 
-Le rapport doit être ACTIONNABLE, SPÉCIFIQUE, et SANS LANGUE DE BOIS. Tu peux et tu DOIS nommer les outils concrets (Claude, ChatGPT, Gemini, Midjourney, n8n, Make, Notion AI, Cursor, etc.).
+Le rapport doit être ACTIONNABLE, SPÉCIFIQUE, SANS LANGUE DE BOIS. Tu DOIS nommer des outils concrets (Claude, ChatGPT, Gemini, Midjourney, n8n, Make, Notion AI, Cursor, etc.).
 
-IMPORTANT : Sois DENSE et CONCIS. Pas de remplissage, pas de répétitions. Chaque phrase doit apporter de la valeur. Le lecteur paie 39€, il veut du concentré, pas de la dilution.
+Sois DENSE et CONCIS. Chaque phrase doit apporter de la valeur.
 
 Métier à analyser : "{METIER}"
 
-Renvoie UNIQUEMENT un JSON valide, sans texte avant ni après, sans backticks markdown, avec cette structure exacte :
+Renvoie UNIQUEMENT un JSON valide, sans texte avant ni après, sans backticks markdown :
 
 {
   "metier_reformule": "Reformulation claire et précise du métier",
   "score_menace": <entier 0-100>,
   "palier": "<'Métier résilient' | 'Évolution nécessaire' | 'Transformation profonde' | 'Risque élevé' | 'Menace existentielle'>",
   "verdict_synthetique": "Une phrase forte qui résume la situation (max 25 mots)",
-  "diagnostic_approfondi": "3 paragraphes denses expliquant POURQUOI ce métier est dans cette situation. Cite des outils, des chiffres. Prose éditoriale.",
+  "diagnostic_approfondi": "3 paragraphes denses (séparés par \\n) expliquant POURQUOI ce métier est dans cette situation. Cite des outils, des chiffres si pertinent. Prose éditoriale.",
   "radar_scores": {
     "automatisation_taches": <0-100>,
     "vitesse_changement": <0-100>,
@@ -52,7 +55,28 @@ Renvoie UNIQUEMENT un JSON valide, sans texte avant ni après, sans backticks ma
       "raison": "Pourquoi elle résiste (1 phrase)"
     }
     // EXACTEMENT 3 tâches
-  ],
+  ]
+}
+
+CONTRAINTES :
+- score_menace cohérent avec palier (0-25 résilient, 26-45 évolution, 46-65 transformation, 66-85 risque élevé, 86-100 existentiel)
+- AUCUN texte hors JSON
+- Français professionnel, ton direct`;
+
+// =========================
+// PROMPT 2 — Plan d'action
+// =========================
+const PROMPT_ACTION = `Tu es un consultant senior spécialisé dans l'impact de l'IA sur les métiers. Tu rédiges la PARTIE PLAN D'ACTION d'un rapport premium (39€).
+
+Le plan doit être ULTRA-CONCRET, ACTIONNABLE, avec des outils nommés (Claude, ChatGPT, n8n, Make, Notion AI, Cursor, Midjourney, ElevenLabs, Perplexity, etc.) et des étapes claires.
+
+Sois DENSE. Pas de remplissage. Chaque ligne doit avoir de la valeur.
+
+Métier à analyser : "{METIER}"
+
+Renvoie UNIQUEMENT un JSON valide, sans texte avant ni après, sans backticks markdown :
+
+{
   "actions_immediates": [
     {
       "titre": "Titre court actionnable (max 8 mots)",
@@ -61,37 +85,37 @@ Renvoie UNIQUEMENT un JSON valide, sans texte avant ni après, sans backticks ma
       "temps_investissement": "Ex: '2h/semaine pendant 1 mois'",
       "impact_attendu": "Ex: 'Gain de 30% sur le temps de production'"
     }
-    // EXACTEMENT 5 actions
+    // EXACTEMENT 5 actions, dans l'ordre logique de mise en œuvre
   ],
   "pivots_strategiques": [
     {
-      "titre": "Nom du pivot",
+      "titre": "Nom du pivot (ex: 'Devenir conseiller stratégique augmenté')",
       "description": "2-3 phrases : positionnement, cible, pourquoi défendable face à l'IA",
       "competences_a_developper": ["Compétence 1", "Compétence 2", "Compétence 3"],
       "potentiel_revenus": "Ex: '+30 à +50% sur 2 ans'",
       "difficulte": "Faible | Moyenne | Élevée"
     }
-    // EXACTEMENT 3 pivots
+    // EXACTEMENT 3 pivots, du plus accessible au plus ambitieux
   ],
   "roadmap_90_jours": {
     "jours_1_30": {
-      "objectif": "Phrase courte sur l'objectif",
-      "actions": ["Action 1", "Action 2", "Action 3", "Action 4"]
+      "objectif": "Phrase courte sur l'objectif du premier mois",
+      "actions": ["Action concrète 1", "Action concrète 2", "Action concrète 3", "Action concrète 4"]
     },
     "jours_31_60": {
-      "objectif": "Phrase courte",
-      "actions": ["Action 1", "Action 2", "Action 3", "Action 4"]
+      "objectif": "Phrase courte sur l'objectif du deuxième mois",
+      "actions": ["Action concrète 1", "Action concrète 2", "Action concrète 3", "Action concrète 4"]
     },
     "jours_61_90": {
-      "objectif": "Phrase courte",
-      "actions": ["Action 1", "Action 2", "Action 3", "Action 4"]
+      "objectif": "Phrase courte sur l'objectif du troisième mois",
+      "actions": ["Action concrète 1", "Action concrète 2", "Action concrète 3", "Action concrète 4"]
     }
   },
   "competences_a_acquerir": [
     {
-      "competence": "Nom",
+      "competence": "Nom de la compétence",
       "pourquoi": "1 phrase",
-      "comment": "1 phrase : ressources concrètes (formations, plateformes nommées)"
+      "comment": "1 phrase : ressources concrètes (formations, certifs, plateformes nommées)"
     }
     // EXACTEMENT 4 compétences
   ],
@@ -107,15 +131,56 @@ Renvoie UNIQUEMENT un JSON valide, sans texte avant ni après, sans backticks ma
 }
 
 CONTRAINTES :
-- score_menace cohérent avec palier (0-25 résilient, 26-45 évolution, 46-65 transformation, 66-85 risque élevé, 86-100 existentiel)
 - AUCUN texte hors JSON
 - Français professionnel, ton direct
-- Outils réels et actuels`;
+- Outils réels et actuels
+- Quantités EXACTES : 5 actions, 3 pivots, 4 compétences, 3 métiers émergents`;
 
+// =========================
+// Utils
+// =========================
 function hashIp(ip) {
-  return crypto.createHash("sha256").update(ip + (process.env.IP_SALT || "")).digest("hex").slice(0, 32);
+  return crypto
+    .createHash("sha256")
+    .update(ip + (process.env.IP_SALT || ""))
+    .digest("hex")
+    .slice(0, 32);
 }
 
+function cleanJsonResponse(raw) {
+  return raw
+    .trim()
+    .replace(/^```json\s*/i, "")
+    .replace(/^```\s*/, "")
+    .replace(/\s*```$/, "")
+    .trim();
+}
+
+async function callClaude(prompt, metier) {
+  let raw = "";
+  const stream = await anthropic.messages.stream({
+    model: "claude-sonnet-4-6",
+    max_tokens: 3500,
+    messages: [
+      {
+        role: "user",
+        content: prompt.replace("{METIER}", metier),
+      },
+    ],
+  });
+
+  for await (const event of stream) {
+    if (event.type === "content_block_delta" && event.delta?.type === "text_delta") {
+      raw += event.delta.text;
+    }
+  }
+
+  return cleanJsonResponse(raw);
+}
+
+// =========================
+// Handler principal
+// =========================
 export async function POST(request) {
   try {
     const { metier } = await request.json();
@@ -128,36 +193,31 @@ export async function POST(request) {
     const ip = request.headers.get("x-forwarded-for")?.split(",")[0] || "unknown";
     const ipHash = hashIp(ip);
 
-    // Appel Claude Sonnet 4.6 EN STREAMING (évite timeout sur la connexion)
-    let raw = "";
-    const stream = await anthropic.messages.stream({
-      model: "claude-sonnet-4-6",
-      max_tokens: 6000,
-      messages: [
-        {
-          role: "user",
-          content: PREMIUM_PROMPT.replace("{METIER}", metierClean),
-        },
-      ],
-    });
+    // === APPELS PARALLÈLES ===
+    const [rawDiag, rawAction] = await Promise.all([
+      callClaude(PROMPT_DIAGNOSTIC, metierClean),
+      callClaude(PROMPT_ACTION, metierClean),
+    ]);
 
-    for await (const event of stream) {
-      if (event.type === "content_block_delta" && event.delta?.type === "text_delta") {
-        raw += event.delta.text;
-      }
-    }
-
-    raw = raw.trim().replace(/^```json\s*/i, "").replace(/^```\s*/, "").replace(/\s*```$/, "").trim();
-
-    let rapport;
+    // === Parsing ===
+    let diagnostic, planAction;
     try {
-      rapport = JSON.parse(raw);
+      diagnostic = JSON.parse(rawDiag);
     } catch (e) {
-      console.error("JSON parse error:", e.message, "Raw start:", raw.slice(0, 300), "Raw end:", raw.slice(-300));
-      return Response.json({ error: "Erreur de génération du rapport. Réessaie." }, { status: 500 });
+      console.error("Diagnostic parse error:", e.message, "Raw:", rawDiag.slice(0, 400));
+      return Response.json({ error: "Erreur de génération (diagnostic). Réessaie." }, { status: 500 });
+    }
+    try {
+      planAction = JSON.parse(rawAction);
+    } catch (e) {
+      console.error("Action parse error:", e.message, "Raw:", rawAction.slice(0, 400));
+      return Response.json({ error: "Erreur de génération (plan d'action). Réessaie." }, { status: 500 });
     }
 
-    // Validation
+    // === Fusion ===
+    const rapport = { ...diagnostic, ...planAction };
+
+    // === Validation ===
     if (
       typeof rapport.score_menace !== "number" ||
       rapport.score_menace < 0 ||
@@ -165,13 +225,15 @@ export async function POST(request) {
       !Array.isArray(rapport.actions_immediates) ||
       rapport.actions_immediates.length < 3 ||
       !Array.isArray(rapport.pivots_strategiques) ||
-      rapport.pivots_strategiques.length < 2
+      rapport.pivots_strategiques.length < 2 ||
+      !Array.isArray(rapport.taches_exposees) ||
+      rapport.taches_exposees.length < 3
     ) {
       console.error("Validation failed:", JSON.stringify(rapport).slice(0, 500));
       return Response.json({ error: "Rapport incomplet, réessaie." }, { status: 500 });
     }
 
-    // Sauvegarde Supabase
+    // === Sauvegarde Supabase ===
     const { data: insertData, error: insertError } = await supabase
       .from("purchases")
       .insert({
