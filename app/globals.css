@@ -599,6 +599,34 @@ a {
 .error-msg { color: #dc2626; font-size: 14px; margin: 8px 0; }
 .success-msg { color: #059669; font-weight: 500; }
 
+.protected-advice {
+  margin-top: 10px;
+  padding: 10px 14px;
+  background: #ecfdf5;
+  border-radius: 8px;
+  font-size: 14px;
+  color: #065f46;
+  line-height: 1.6;
+}
+.protected-advice strong {
+  color: #047857;
+}
+.protected-conclusion {
+  margin-top: 24px;
+  padding: 20px 24px;
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+  color: white;
+  border-radius: 12px;
+  font-size: 15px;
+  line-height: 1.65;
+  font-style: italic;
+}
+.protected-conclusion p {
+  margin: 0;
+  color: white;
+}
+
+
 /* ============ RADAR CHART ============ */
 .radar-wrapper {
   display: flex;
