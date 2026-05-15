@@ -1,6 +1,4 @@
-import { Document, Page, Text, View, StyleSheet, Font } from "@react-pdf/renderer";
-
-// Pas de Google Fonts (CORS sur serverless). On reste sur Helvetica par défaut, élégant en PDF.
+import { Document, Page, Text, View, StyleSheet } from "@react-pdf/renderer";
 
 const COLORS = {
   ink: "#0f172a",
@@ -8,7 +6,8 @@ const COLORS = {
   muted: "#64748b",
   border: "#e2e8f0",
   bg: "#f8fafc",
-  accent: "#1e293b",
+  green: "#047857",
+  greenBg: "#ecfdf5",
 };
 
 const scoreColor = (score) => {
@@ -21,185 +20,211 @@ const scoreColor = (score) => {
 
 const styles = StyleSheet.create({
   page: {
-    paddingTop: 56,
-    paddingBottom: 64,
-    paddingHorizontal: 56,
+    paddingTop: 40,
+    paddingBottom: 48,
+    paddingHorizontal: 48,
     fontFamily: "Helvetica",
-    fontSize: 11,
+    fontSize: 10,
     color: COLORS.body,
-    lineHeight: 1.55,
+    lineHeight: 1.5,
   },
+  // Header de page (badge + titre + date)
   badge: {
     fontSize: 8,
-    letterSpacing: 2,
+    letterSpacing: 1.5,
     color: COLORS.muted,
-    marginBottom: 8,
+    marginBottom: 6,
     fontFamily: "Helvetica-Bold",
   },
   h1: {
-    fontSize: 28,
+    fontSize: 22,
     fontFamily: "Helvetica-Bold",
     color: COLORS.ink,
-    marginBottom: 6,
+    marginBottom: 4,
+    lineHeight: 1.2,
   },
-  date: { fontSize: 9, color: COLORS.muted, marginBottom: 32 },
+  date: { fontSize: 9, color: COLORS.muted, marginBottom: 20 },
+
+  // Score box
   scoreBox: {
-    backgroundColor: COLORS.ink,
     color: "white",
-    padding: 24,
-    borderRadius: 12,
+    paddingVertical: 18,
+    paddingHorizontal: 24,
+    borderRadius: 10,
     alignItems: "center",
-    marginBottom: 16,
+    marginBottom: 12,
   },
   scoreNumber: {
-    fontSize: 64,
+    fontSize: 48,
     fontFamily: "Helvetica-Bold",
     color: "white",
+    lineHeight: 1,
   },
-  scoreSlash: { fontSize: 14, color: "white", opacity: 0.7 },
+  scoreSlash: { fontSize: 12, color: "white", opacity: 0.7 },
   palier: {
     fontSize: 9,
     letterSpacing: 1.5,
     color: COLORS.muted,
     fontFamily: "Helvetica-Bold",
-    marginBottom: 16,
+    marginBottom: 12,
     textAlign: "center",
   },
   verdict: {
     fontStyle: "italic",
-    fontSize: 14,
+    fontSize: 12,
     color: COLORS.ink,
     borderLeft: `3pt solid ${COLORS.ink}`,
-    paddingLeft: 12,
-    marginVertical: 16,
-    lineHeight: 1.5,
+    paddingLeft: 10,
+    marginVertical: 12,
+    lineHeight: 1.4,
   },
+
+  // Sections
   h2: {
-    fontSize: 18,
+    fontSize: 15,
     fontFamily: "Helvetica-Bold",
     color: COLORS.ink,
-    marginTop: 24,
-    marginBottom: 12,
+    marginTop: 18,
+    marginBottom: 8,
   },
   intro: {
     fontStyle: "italic",
     color: COLORS.muted,
-    marginBottom: 14,
-    fontSize: 10,
-  },
-  prose: { marginBottom: 10, lineHeight: 1.6 },
-  card: {
-    border: `1pt solid ${COLORS.border}`,
-    borderRadius: 6,
-    padding: 12,
     marginBottom: 10,
+    fontSize: 9,
   },
+  prose: { marginBottom: 6, lineHeight: 1.55, fontSize: 10 },
+
+  // Cards génériques
+  card: {
+    border: `0.5pt solid ${COLORS.border}`,
+    borderRadius: 4,
+    padding: 10,
+    marginBottom: 6,
+  },
+
+  // Tâches exposées
   taskHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
-    marginBottom: 6,
+    alignItems: "center",
+    marginBottom: 4,
   },
-  taskTitle: { fontFamily: "Helvetica-Bold", fontSize: 11, color: COLORS.ink, flex: 1 },
+  taskTitle: { fontFamily: "Helvetica-Bold", fontSize: 10, color: COLORS.ink, flex: 1, paddingRight: 8 },
   taskHorizon: {
-    fontSize: 8,
+    fontSize: 7,
     backgroundColor: "#fef3c7",
     color: "#92400e",
-    paddingHorizontal: 6,
+    paddingHorizontal: 5,
     paddingVertical: 2,
-    borderRadius: 3,
+    borderRadius: 2,
   },
   progressBar: {
-    height: 5,
+    height: 4,
     backgroundColor: COLORS.bg,
-    borderRadius: 3,
-    marginVertical: 6,
+    borderRadius: 2,
+    marginVertical: 4,
   },
-  progressFill: { height: 5, borderRadius: 3 },
-  taskExpl: { fontSize: 10, color: COLORS.body, lineHeight: 1.5 },
+  progressFill: { height: 4, borderRadius: 2 },
+  taskExpl: { fontSize: 9, color: COLORS.body, lineHeight: 1.45 },
+
+  // Tâches protégées
   protectedCard: {
-    borderLeft: `3pt solid #10b981`,
+    borderLeft: `2pt solid #10b981`,
+    paddingLeft: 8,
+    paddingVertical: 6,
+    paddingRight: 8,
+    marginBottom: 5,
+    backgroundColor: COLORS.greenBg,
+    borderRadius: 2,
+  },
+  protectedTitle: { fontFamily: "Helvetica-Bold", color: COLORS.green, fontSize: 10, marginBottom: 2 },
+
+  // Actions
+  actionCard: {
+    flexDirection: "row",
+    gap: 12,
+    marginBottom: 10,
+    paddingBottom: 10,
+    borderBottom: `0.5pt solid ${COLORS.border}`,
+  },
+  actionNum: {
+    fontSize: 22,
+    fontFamily: "Helvetica-Bold",
+    color: "#cbd5e1",
+    width: 28,
+  },
+  actionBody: { flex: 1 },
+  actionTitle: { fontFamily: "Helvetica-Bold", fontSize: 11, color: COLORS.ink, marginBottom: 4 },
+  actionDesc: { fontSize: 9.5, lineHeight: 1.5, marginBottom: 4 },
+  actionMeta: { fontSize: 8.5, color: COLORS.muted, marginTop: 2 },
+
+  // Pivots
+  pivotCard: {
+    borderTop: `2pt solid ${COLORS.ink}`,
     padding: 10,
     marginBottom: 8,
     backgroundColor: COLORS.bg,
-    borderRadius: 4,
+    borderRadius: 3,
   },
-  protectedTitle: { fontFamily: "Helvetica-Bold", color: "#047857", fontSize: 11, marginBottom: 4 },
-  actionCard: {
-    flexDirection: "row",
-    gap: 14,
-    marginBottom: 14,
-    paddingBottom: 14,
-    borderBottom: `1pt solid ${COLORS.border}`,
-  },
-  actionNum: {
-    fontSize: 32,
-    fontFamily: "Helvetica-Bold",
-    color: "#cbd5e1",
-    width: 40,
-  },
-  actionBody: { flex: 1 },
-  actionTitle: { fontFamily: "Helvetica-Bold", fontSize: 13, color: COLORS.ink, marginBottom: 6 },
-  actionDesc: { fontSize: 10, lineHeight: 1.6, marginBottom: 8 },
-  actionMeta: { fontSize: 9, color: COLORS.muted, marginTop: 4 },
-  pivotCard: {
-    borderTop: `3pt solid ${COLORS.ink}`,
-    padding: 14,
-    marginBottom: 12,
-    backgroundColor: COLORS.bg,
-    borderRadius: 4,
-  },
-  pivotDiff: { fontSize: 8, letterSpacing: 1, color: COLORS.muted, marginBottom: 4 },
-  pivotTitle: { fontFamily: "Helvetica-Bold", fontSize: 13, color: COLORS.ink, marginBottom: 6 },
-  pivotDesc: { fontSize: 10, lineHeight: 1.6, marginBottom: 8 },
-  pivotSkills: { fontSize: 9, marginTop: 6 },
+  pivotDiff: { fontSize: 7, letterSpacing: 1, color: COLORS.muted, marginBottom: 3 },
+  pivotTitle: { fontFamily: "Helvetica-Bold", fontSize: 11, color: COLORS.ink, marginBottom: 4 },
+  pivotDesc: { fontSize: 9.5, lineHeight: 1.5, marginBottom: 5 },
+  pivotMeta: { fontSize: 9, marginTop: 3 },
+
+  // Roadmap
   roadmapPhase: {
-    border: `1pt solid ${COLORS.border}`,
-    borderRadius: 6,
-    padding: 12,
-    marginBottom: 10,
+    border: `0.5pt solid ${COLORS.border}`,
+    borderRadius: 4,
+    padding: 10,
+    marginBottom: 6,
   },
-  roadmapHead: { flexDirection: "row", alignItems: "center", marginBottom: 8 },
+  roadmapHead: { flexDirection: "row", alignItems: "center", marginBottom: 6 },
   roadmapNum: {
-    fontSize: 24,
+    fontSize: 18,
     fontFamily: "Helvetica-Bold",
     color: COLORS.ink,
-    marginRight: 12,
+    marginRight: 10,
+    width: 16,
   },
-  roadmapPhaseTitle: { fontFamily: "Helvetica-Bold", fontSize: 12 },
-  roadmapObj: { fontSize: 9, color: COLORS.muted },
-  bullet: { fontSize: 10, marginBottom: 3 },
+  roadmapPhaseTitle: { fontFamily: "Helvetica-Bold", fontSize: 10.5 },
+  roadmapObj: { fontSize: 8.5, color: COLORS.muted },
+  bullet: { fontSize: 9, marginBottom: 2, lineHeight: 1.45 },
+
+  // Bloc final
   finalBox: {
     backgroundColor: COLORS.ink,
     color: "white",
-    padding: 32,
-    borderRadius: 12,
-    marginTop: 24,
-    textAlign: "center",
+    padding: 24,
+    borderRadius: 10,
+    marginTop: 18,
   },
   mantra: {
     color: "white",
-    fontSize: 16,
+    fontSize: 13,
     fontStyle: "italic",
     textAlign: "center",
     lineHeight: 1.5,
   },
   signature: {
     color: "#94a3b8",
-    fontSize: 8,
+    fontSize: 7,
     letterSpacing: 2,
-    marginTop: 16,
+    marginTop: 12,
     textAlign: "center",
   },
+
+  // Footer
   footer: {
     position: "absolute",
-    bottom: 24,
-    left: 56,
-    right: 56,
-    fontSize: 8,
+    bottom: 18,
+    left: 48,
+    right: 48,
+    fontSize: 7,
     color: COLORS.muted,
     textAlign: "center",
-    borderTop: `1pt solid ${COLORS.border}`,
-    paddingTop: 8,
+    borderTop: `0.5pt solid ${COLORS.border}`,
+    paddingTop: 6,
   },
 });
 
@@ -213,13 +238,14 @@ export default function PremiumPdfDocument({ purchase }) {
 
   return (
     <Document title={`Rapport premium · ${r.metier_reformule}`} author="sauvetonjob.fr">
-      {/* Page 1 — Cover + Diagnostic */}
+
+      {/* ========== PAGE 1 : Cover + Diagnostic + Tâches exposées ========== */}
       <Page size="A4" style={styles.page}>
         <Text style={styles.badge}>RAPPORT PREMIUM</Text>
         <Text style={styles.h1}>{r.metier_reformule}</Text>
         <Text style={styles.date}>Généré le {dateStr}</Text>
 
-        <View style={[styles.scoreBox, { backgroundColor: scoreColor(r.score_menace) }]}>
+        <View style={[styles.scoreBox, { backgroundColor: scoreColor(r.score_menace) }]} wrap={false}>
           <Text style={styles.scoreNumber}>
             {r.score_menace}
             <Text style={styles.scoreSlash}> / 100</Text>
@@ -233,14 +259,9 @@ export default function PremiumPdfDocument({ purchase }) {
           <Text key={i} style={styles.prose}>{p}</Text>
         ))}
 
-        <Text style={styles.footer}>sauvetonjob.fr · Rapport confidentiel généré pour {r.metier_reformule}</Text>
-      </Page>
-
-      {/* Page 2 — Tâches exposées + protégées */}
-      <Page size="A4" style={styles.page}>
         <Text style={styles.h2}>Tâches exposées à l'IA</Text>
         {r.taches_exposees.map((t, i) => (
-          <View key={i} style={styles.card}>
+          <View key={i} style={styles.card} wrap={false}>
             <View style={styles.taskHeader}>
               <Text style={styles.taskTitle}>{t.tache}</Text>
               <Text style={styles.taskHorizon}>{t.horizon}</Text>
@@ -252,20 +273,20 @@ export default function PremiumPdfDocument({ purchase }) {
           </View>
         ))}
 
+        <Text style={styles.footer}>sauvetonjob.fr · {r.metier_reformule}</Text>
+      </Page>
+
+      {/* ========== PAGE 2 : Tâches protégées + 5 actions ========== */}
+      <Page size="A4" style={styles.page}>
         <Text style={styles.h2}>Tâches protégées — votre socle</Text>
         <Text style={styles.intro}>Ce que l'IA ne peut pas remplacer dans votre métier.</Text>
         {r.taches_protegees.map((t, i) => (
-          <View key={i} style={styles.protectedCard}>
+          <View key={i} style={styles.protectedCard} wrap={false}>
             <Text style={styles.protectedTitle}>✓ {t.tache}</Text>
             <Text style={styles.taskExpl}>{t.raison}</Text>
           </View>
         ))}
 
-        <Text style={styles.footer}>sauvetonjob.fr · {r.metier_reformule}</Text>
-      </Page>
-
-      {/* Page 3 — 5 actions */}
-      <Page size="A4" style={styles.page}>
         <Text style={styles.h2}>5 actions immédiates</Text>
         <Text style={styles.intro}>Concrètes, à mettre en œuvre dans les 30 prochains jours.</Text>
         {r.actions_immediates.map((a, i) => (
@@ -280,10 +301,11 @@ export default function PremiumPdfDocument({ purchase }) {
             </View>
           </View>
         ))}
+
         <Text style={styles.footer}>sauvetonjob.fr · {r.metier_reformule}</Text>
       </Page>
 
-      {/* Page 4 — Pivots */}
+      {/* ========== PAGE 3 : Pivots + Roadmap ========== */}
       <Page size="A4" style={styles.page}>
         <Text style={styles.h2}>3 pivots stratégiques</Text>
         <Text style={styles.intro}>Du plus accessible au plus ambitieux.</Text>
@@ -292,21 +314,17 @@ export default function PremiumPdfDocument({ purchase }) {
             <Text style={styles.pivotDiff}>DIFFICULTÉ : {p.difficulte.toUpperCase()}</Text>
             <Text style={styles.pivotTitle}>{p.titre}</Text>
             <Text style={styles.pivotDesc}>{p.description}</Text>
-            <Text style={styles.pivotSkills}>
+            <Text style={styles.pivotMeta}>
               <Text style={{ fontFamily: "Helvetica-Bold" }}>À développer : </Text>
               {p.competences_a_developper.join(" · ")}
             </Text>
-            <Text style={styles.pivotSkills}>
+            <Text style={styles.pivotMeta}>
               <Text style={{ fontFamily: "Helvetica-Bold" }}>Potentiel revenus : </Text>
               {p.potentiel_revenus}
             </Text>
           </View>
         ))}
-        <Text style={styles.footer}>sauvetonjob.fr · {r.metier_reformule}</Text>
-      </Page>
 
-      {/* Page 5 — Roadmap */}
-      <Page size="A4" style={styles.page}>
         <Text style={styles.h2}>Roadmap 90 jours</Text>
         {[
           { key: "jours_1_30", label: "Jours 1 → 30", num: "1" },
@@ -326,16 +344,17 @@ export default function PremiumPdfDocument({ purchase }) {
             ))}
           </View>
         ))}
+
         <Text style={styles.footer}>sauvetonjob.fr · {r.metier_reformule}</Text>
       </Page>
 
-      {/* Page 6 — Compétences + métiers émergents + final */}
+      {/* ========== PAGE 4 : Compétences + Métiers émergents + Mantra final ========== */}
       <Page size="A4" style={styles.page}>
         <Text style={styles.h2}>Compétences à acquérir</Text>
         {r.competences_a_acquerir.map((c, i) => (
           <View key={i} style={styles.card} wrap={false}>
-            <Text style={styles.taskTitle}>{c.competence}</Text>
-            <Text style={[styles.taskExpl, { marginTop: 4 }]}>
+            <Text style={styles.actionTitle}>{c.competence}</Text>
+            <Text style={[styles.taskExpl, { marginTop: 3 }]}>
               <Text style={{ fontFamily: "Helvetica-Bold" }}>Pourquoi : </Text>{c.pourquoi}
             </Text>
             <Text style={styles.taskExpl}>
@@ -347,15 +366,15 @@ export default function PremiumPdfDocument({ purchase }) {
         <Text style={styles.h2}>Métiers émergents accessibles</Text>
         {r.metiers_emergents.map((m, i) => (
           <View key={i} style={styles.card} wrap={false}>
-            <Text style={styles.taskTitle}>→ {m.metier}</Text>
-            <Text style={[styles.taskExpl, { marginTop: 4 }]}>{m.description}</Text>
-            <Text style={[styles.actionMeta, { marginTop: 6 }]}>
+            <Text style={styles.actionTitle}>→ {m.metier}</Text>
+            <Text style={[styles.taskExpl, { marginTop: 3 }]}>{m.description}</Text>
+            <Text style={[styles.actionMeta, { marginTop: 4 }]}>
               <Text style={{ fontFamily: "Helvetica-Bold" }}>Transition : </Text>{m.transition_depuis_actuel}
             </Text>
           </View>
         ))}
 
-        <View style={styles.finalBox}>
+        <View style={styles.finalBox} wrap={false}>
           <Text style={styles.mantra}>« {r.mantra_final} »</Text>
           <Text style={styles.signature}>SAUVETONJOB.FR</Text>
         </View>
