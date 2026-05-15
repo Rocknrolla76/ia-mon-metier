@@ -1,12 +1,43 @@
 "use client";
 
 const AXES = [
-  { key: "automatisation_taches", label: "Automatisation des tâches", short: "Automatisation" },
-  { key: "vitesse_changement", label: "Vitesse du changement", short: "Vitesse" },
-  { key: "outils_disponibles", label: "Outils disponibles", short: "Outils" },
-  { key: "concurrence_ia", label: "Concurrence IA directe", short: "Concurrence IA" },
-  { key: "barriere_humaine", label: "Exposition humaine", short: "Exposition", invert: true },
-  { key: "pression_marche", label: "Pression du marché", short: "Marché" },
+  {
+    key: "automatisation_taches",
+    label: "Automatisation des tâches",
+    short: "Automatisation",
+    legend: "Part de vos tâches actuelles qu'une IA peut déjà réaliser",
+  },
+  {
+    key: "vitesse_changement",
+    label: "Vitesse du changement",
+    short: "Vitesse",
+    legend: "Rapidité à laquelle l'IA s'améliore sur votre métier",
+  },
+  {
+    key: "outils_disponibles",
+    label: "Outils disponibles",
+    short: "Outils",
+    legend: "Maturité des outils IA spécifiques à votre secteur",
+  },
+  {
+    key: "concurrence_ia",
+    label: "Concurrence IA directe",
+    short: "Concurrence",
+    legend: "Niveau de remplacement direct par des solutions IA",
+  },
+  {
+    key: "barriere_humaine",
+    label: "Exposition humaine",
+    short: "Exposition",
+    legend: "Risque que des tâches humaines basculent vers l'IA",
+    invert: true,
+  },
+  {
+    key: "pression_marche",
+    label: "Pression du marché",
+    short: "Marché",
+    legend: "Pression économique poussant à adopter l'IA dans votre secteur",
+  },
 ];
 
 export default function RadarChart({ scores }) {
@@ -17,14 +48,12 @@ export default function RadarChart({ scores }) {
   const radius = 150;
   const labelRadius = radius + 38;
 
-  // Normalise chaque axe : inverse barriere_humaine pour que TOUT pointe vers "menace"
   const values = AXES.map((axis) => {
     const raw = scores[axis.key] ?? 0;
     const value = axis.invert ? 100 - raw : raw;
     return { ...axis, value: Math.max(0, Math.min(100, value)) };
   });
 
-  // Calcule les points du polygone et des labels
   const getPoint = (index, valuePct) => {
     const angle = (Math.PI * 2 * index) / AXES.length - Math.PI / 2;
     const distance = (radius * valuePct) / 100;
@@ -39,11 +68,9 @@ export default function RadarChart({ scores }) {
     return {
       x: center + Math.cos(angle) * labelRadius,
       y: center + Math.sin(angle) * labelRadius,
-      angle,
     };
   };
 
-  // Polygone des valeurs
   const polygonPoints = values
     .map((v, i) => {
       const p = getPoint(i, v.value);
@@ -51,16 +78,12 @@ export default function RadarChart({ scores }) {
     })
     .join(" ");
 
-  // Grille concentrique (4 niveaux : 25, 50, 75, 100)
   const gridLevels = [25, 50, 75, 100];
-
-  // Score moyen pour le centre
   const avgScore = Math.round(values.reduce((s, v) => s + v.value, 0) / values.length);
 
   return (
     <div className="radar-wrapper">
       <svg viewBox={`0 0 ${size} ${size}`} xmlns="http://www.w3.org/2000/svg" className="radar-svg">
-        {/* Grille concentrique */}
         {gridLevels.map((level) => (
           <polygon
             key={level}
@@ -74,23 +97,13 @@ export default function RadarChart({ scores }) {
           />
         ))}
 
-        {/* Axes (lignes radiales) */}
         {AXES.map((_, i) => {
           const p = getPoint(i, 100);
           return (
-            <line
-              key={i}
-              x1={center}
-              y1={center}
-              x2={p.x}
-              y2={p.y}
-              stroke="#e2e8f0"
-              strokeWidth="1"
-            />
+            <line key={i} x1={center} y1={center} x2={p.x} y2={p.y} stroke="#e2e8f0" strokeWidth="1" />
           );
         })}
 
-        {/* Graduations (25, 50, 75) */}
         {[25, 50, 75].map((level) => (
           <text
             key={level}
@@ -104,7 +117,13 @@ export default function RadarChart({ scores }) {
           </text>
         ))}
 
-        {/* Polygone des valeurs */}
+        <defs>
+          <radialGradient id="radarGradient">
+            <stop offset="0%" stopColor="#fbbf24" stopOpacity="0.5" />
+            <stop offset="100%" stopColor="#dc2626" stopOpacity="0.6" />
+          </radialGradient>
+        </defs>
+
         <polygon
           points={polygonPoints}
           fill="url(#radarGradient)"
@@ -114,31 +133,13 @@ export default function RadarChart({ scores }) {
           strokeLinejoin="round"
         />
 
-        {/* Gradient pour le remplissage */}
-        <defs>
-          <radialGradient id="radarGradient">
-            <stop offset="0%" stopColor="#fbbf24" stopOpacity="0.5" />
-            <stop offset="100%" stopColor="#dc2626" stopOpacity="0.6" />
-          </radialGradient>
-        </defs>
-
-        {/* Points sur chaque axe */}
         {values.map((v, i) => {
           const p = getPoint(i, v.value);
           return (
-            <circle
-              key={i}
-              cx={p.x}
-              cy={p.y}
-              r="4"
-              fill="#dc2626"
-              stroke="white"
-              strokeWidth="2"
-            />
+            <circle key={i} cx={p.x} cy={p.y} r="4" fill="#dc2626" stroke="white" strokeWidth="2" />
           );
         })}
 
-        {/* Labels avec valeurs */}
         {values.map((v, i) => {
           const lp = getLabelPoint(i);
           const isLeft = lp.x < center - 10;
@@ -147,50 +148,45 @@ export default function RadarChart({ scores }) {
 
           return (
             <g key={`label-${i}`}>
-              <text
-                x={lp.x}
-                y={lp.y - 6}
-                fontSize="11"
-                fontWeight="600"
-                fill="#0f172a"
-                textAnchor={anchor}
-                fontFamily="system-ui, sans-serif"
-              >
+              <text x={lp.x} y={lp.y - 6} fontSize="11" fontWeight="600" fill="#0f172a" textAnchor={anchor} fontFamily="system-ui, sans-serif">
                 {v.short}
               </text>
-              <text
-                x={lp.x}
-                y={lp.y + 8}
-                fontSize="13"
-                fontWeight="700"
-                fill="#dc2626"
-                textAnchor={anchor}
-                fontFamily="system-ui, sans-serif"
-              >
+              <text x={lp.x} y={lp.y + 8} fontSize="13" fontWeight="700" fill="#dc2626" textAnchor={anchor} fontFamily="system-ui, sans-serif">
                 {v.value}
               </text>
             </g>
           );
         })}
 
-        {/* Score moyen au centre */}
         <circle cx={center} cy={center} r="22" fill="#0f172a" />
-        <text
-          x={center}
-          y={center + 5}
-          fontSize="16"
-          fontWeight="700"
-          fill="white"
-          textAnchor="middle"
-          fontFamily="system-ui, sans-serif"
-        >
+        <text x={center} y={center + 5} fontSize="16" fontWeight="700" fill="white" textAnchor="middle" fontFamily="system-ui, sans-serif">
           {avgScore}
         </text>
       </svg>
 
-      <p className="radar-legend">
+      <p className="radar-intro">
         Profil de risque sur 6 dimensions — plus la zone est étendue, plus la pression IA est forte sur votre métier.
       </p>
+
+      <div className="radar-legend-grid">
+        {values.map((v) => (
+          <div key={v.key} className="radar-legend-item">
+            <div className="radar-legend-header">
+              <span className="radar-legend-name">{v.label}</span>
+              <span className="radar-legend-score" style={{ color: scoreColor(v.value) }}>
+                {v.value}
+              </span>
+            </div>
+            <p className="radar-legend-text">{v.legend}</p>
+          </div>
+        ))}
+      </div>
     </div>
   );
+}
+
+function scoreColor(value) {
+  if (value < 33) return "#059669";
+  if (value < 66) return "#d97706";
+  return "#dc2626";
 }
