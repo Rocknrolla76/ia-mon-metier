@@ -2,6 +2,31 @@
 
 import { useState, useRef, useEffect } from "react";
 
+const [generatingPremium, setGeneratingPremium] = useState(false);
+
+const handleSimulatePurchase = async () => {
+  if (!metier) return; // metier = state qui contient le métier saisi
+  setGeneratingPremium(true);
+  try {
+    const res = await fetch("/api/premium-generate", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ metier }),
+    });
+    const data = await res.json();
+    if (data.purchase_id) {
+      window.location.href = `/rapport/${data.purchase_id}`;
+    } else {
+      alert("Erreur de génération. Réessaie.");
+    }
+  } catch {
+    alert("Erreur réseau. Réessaie.");
+  } finally {
+    setGeneratingPremium(false);
+  }
+};
+
+
 export default function Home() {
   const [metier, setMetier] = useState("");
   const [loading, setLoading] = useState(false);
@@ -827,14 +852,10 @@ function PremiumCTA({ metier }) {
             fontSize: "16px",
             padding: "16px 32px",
           }}
-          onClick={() => {
-            alert(
-              "Stripe Checkout sera branché à l'étape suivante. Pour l'instant, c'est juste l'UI."
-            );
-          }}
+          onClick={handleSimulatePurchase}
+          disabled={generatingPremium}
         >
-          Recevoir le rapport complet
-          <ArrowRight />
+            {generatingPremium ? "Génération du rapport…" : "Recevoir le rapport complet · 39€"}
         </button>
 
         <p
