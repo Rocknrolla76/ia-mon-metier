@@ -1,5 +1,7 @@
 "use client";
 
+import RadarChart from "./RadarChart";
+
 import { useState } from "react";
 
 export default function PremiumReportView({ purchase }) {
@@ -81,6 +83,14 @@ export default function PremiumReportView({ purchase }) {
         ))}
       </section>
 
+      {r.radar_scores && (
+        <section className="premium-section">
+          <h2>Cartographie du risque IA</h2>
+          <p className="section-intro">Six dimensions évaluées entre 0 et 100. Plus la valeur est haute, plus la pression IA est forte sur cet axe.</p>
+          <RadarChart scores={r.radar_scores} />
+        </section>
+      )}
+
       <section className="premium-section">
         <h2>Tâches exposées à l'IA</h2>
         <div className="tasks-list">
@@ -98,6 +108,8 @@ export default function PremiumReportView({ purchase }) {
           ))}
         </div>
       </section>
+
+    
 
       <section className="premium-section">
         <h2>Tâches protégées — votre socle</h2>
