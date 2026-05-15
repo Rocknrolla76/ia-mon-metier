@@ -2,14 +2,6 @@
 
 import { useState, useRef, useEffect } from "react";
 
-// ...
-
-<PremiumCTA
-  metier={metier}
-  onPurchase={handleSimulatePurchase}
-  loading={generatingPremium}
-/>
-
 
 export default function Home() {
   const [metier, setMetier] = useState("");
