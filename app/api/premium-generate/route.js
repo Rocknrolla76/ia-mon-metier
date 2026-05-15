@@ -38,9 +38,15 @@ Renvoie UNIQUEMENT un JSON valide, sans texte ni backticks autour :
   "taches_exposees": [
     { "tache": "Description précise", "niveau_automatisation": <0-100>, "explication": "2 phrases avec outils nommés", "horizon": "Déjà automatisable|1-2 ans|3-5 ans" }
   ],
+  "taches_protegees_intro": "2-3 phrases d'introduction qui expliquent POURQUOI certaines tâches résistent à l'IA dans ce métier spécifique. Ton éditorial, pas générique. Doit donner envie de lire la suite.",
   "taches_protegees": [
-    { "tache": "Tâche résistante", "raison": "Pourquoi (1 phrase)" }
+    {
+      "tache": "Tâche résistante à l'IA",
+      "raison": "1-2 phrases : pourquoi elle résiste (jugement, relation, contexte, responsabilité, créativité, etc.)",
+      "conseil_valorisation": "1-2 phrases : comment valoriser cette tâche davantage pour en faire un avantage compétitif durable. Concret et actionnable."
+    }
   ],
+  "taches_protegees_conclusion": "2-3 phrases de conclusion stratégique : comment construire un positionnement professionnel autour de ces tâches protégées pour devenir difficilement remplaçable. Doit être motivant et orienté action.",
   "roadmap_90_jours": {
     "jours_1_30": { "objectif": "Phrase courte", "actions": ["Action 1", "Action 2", "Action 3", "Action 4"] },
     "jours_31_60": { "objectif": "Phrase courte", "actions": ["Action 1", "Action 2", "Action 3", "Action 4"] },
@@ -53,45 +59,6 @@ EXACTEMENT 5 taches_exposees triées par niveau_automatisation décroissant, EXA
 Cohérence score/palier : 0-25 résilient, 26-45 évolution, 46-65 transformation, 66-85 risque élevé, 86-100 existentiel.
 AUCUN texte hors JSON. Français professionnel, ton direct.`;
 
-const PROMPT_ACTION = `Tu rédiges la PARTIE PLAN D'ACTION d'un rapport premium (39€) sur l'impact de l'IA sur un métier.
-
-ULTRA-CONCRET, DENSE. Outils nommés (Claude, ChatGPT, n8n, Make, Notion AI, Cursor, Midjourney, ElevenLabs, Perplexity, etc.). Pas de remplissage. Phrases courtes et percutantes.
-
-Métier : "{METIER}"
-
-Renvoie UNIQUEMENT un JSON valide, sans texte ni backticks autour :
-
-{
-  "actions_immediates": [
-    {
-      "titre": "Titre court actionnable (max 8 mots)",
-      "description": "2-3 phrases concrètes. Outils nommés. Étapes claires.",
-      "outils_recommandes": ["Outil 1", "Outil 2", "Outil 3"],
-      "temps_investissement": "Ex: '2h/sem pendant 1 mois'",
-      "impact_attendu": "Ex: '-30% de temps sur les bilans'"
-    }
-  ],
-  "pivots_strategiques": [
-    {
-      "titre": "Nom du pivot",
-      "description": "2 phrases : positionnement, pourquoi défendable face à l'IA",
-      "competences_a_developper": ["Compétence 1", "Compétence 2", "Compétence 3"],
-      "potentiel_revenus": "Ex: '+30 à +50% sur 2 ans'",
-      "difficulte": "Faible|Moyenne|Élevée"
-    }
-  ],
-  "competences_a_acquerir": [
-    { "competence": "Nom", "pourquoi": "1 phrase", "comment": "1 phrase avec ressources nommées" }
-  ],
-  "metiers_emergents": [
-    { "metier": "Nom", "description": "1 phrase", "transition_depuis_actuel": "1 phrase" }
-  ],
-  "mantra_final": "Phrase forte motivante (max 20 mots)"
-}
-
-EXACTEMENT 5 actions_immediates, 3 pivots_strategiques, 4 competences_a_acquerir, 3 metiers_emergents.
-
-AUCUN texte hors JSON. Français professionnel, ton direct. Outils réels.`;
 
 function hashIp(ip) {
   return crypto
