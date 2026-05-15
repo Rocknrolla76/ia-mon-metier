@@ -120,7 +120,7 @@ export async function POST(request) {
 
     // 3000 tokens chacun, suffisant pour la nouvelle taille des prompts
     const [rawDiag, rawAction] = await Promise.all([
-      callClaude(PROMPT_DIAGNOSTIC, metierClean, "DIAG", 3000),
+      callClaude(PROMPT_DIAGNOSTIC, metierClean, "DIAG", 3500),
       callClaude(PROMPT_ACTION, metierClean, "ACTION", 3000),
     ]);
 
