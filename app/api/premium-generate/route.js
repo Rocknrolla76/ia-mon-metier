@@ -13,9 +13,6 @@ const supabase = createClient(
   { auth: { persistSession: false } }
 );
 
-// =========================
-// PROMPT 1 — Diagnostic
-// =========================
 const PROMPT_DIAGNOSTIC = `Tu es un consultant senior spécialisé dans l'impact de l'IA sur les métiers. Tu rédiges la PARTIE DIAGNOSTIC d'un rapport premium (39€).
 
 Le rapport doit être ACTIONNABLE, SPÉCIFIQUE, SANS LANGUE DE BOIS. Tu DOIS nommer des outils concrets (Claude, ChatGPT, Gemini, Midjourney, n8n, Make, Notion AI, Cursor, etc.).
@@ -47,25 +44,22 @@ Renvoie UNIQUEMENT un JSON valide, sans texte avant ni après, sans backticks ma
       "explication": "2 phrases sur COMMENT l'IA la prend en charge, avec outils nommés",
       "horizon": "Déjà automatisable | 1-2 ans | 3-5 ans"
     }
-    // EXACTEMENT 5 tâches, triées par niveau_automatisation décroissant
   ],
   "taches_protegees": [
     {
       "tache": "Tâche qui résiste à l'IA",
       "raison": "Pourquoi elle résiste (1 phrase)"
     }
-    // EXACTEMENT 3 tâches
   ]
 }
+
+EXACTEMENT 5 taches_exposees triées par niveau_automatisation décroissant, EXACTEMENT 3 taches_protegees.
 
 CONTRAINTES :
 - score_menace cohérent avec palier (0-25 résilient, 26-45 évolution, 46-65 transformation, 66-85 risque élevé, 86-100 existentiel)
 - AUCUN texte hors JSON
 - Français professionnel, ton direct`;
 
-// =========================
-// PROMPT 2 — Plan d'action
-// =========================
 const PROMPT_ACTION = `Tu es un consultant senior spécialisé dans l'impact de l'IA sur les métiers. Tu rédiges la PARTIE PLAN D'ACTION d'un rapport premium (39€).
 
 Le plan doit être ULTRA-CONCRET, ACTIONNABLE, avec des outils nommés (Claude, ChatGPT, n8n, Make, Notion AI, Cursor, Midjourney, ElevenLabs, Perplexity, etc.) et des étapes claires.
@@ -85,60 +79,54 @@ Renvoie UNIQUEMENT un JSON valide, sans texte avant ni après, sans backticks ma
       "temps_investissement": "Ex: '2h/semaine pendant 1 mois'",
       "impact_attendu": "Ex: 'Gain de 30% sur le temps de production'"
     }
-    // EXACTEMENT 5 actions, dans l'ordre logique de mise en œuvre
   ],
   "pivots_strategiques": [
     {
-      "titre": "Nom du pivot (ex: 'Devenir conseiller stratégique augmenté')",
+      "titre": "Nom du pivot",
       "description": "2-3 phrases : positionnement, cible, pourquoi défendable face à l'IA",
       "competences_a_developper": ["Compétence 1", "Compétence 2", "Compétence 3"],
       "potentiel_revenus": "Ex: '+30 à +50% sur 2 ans'",
       "difficulte": "Faible | Moyenne | Élevée"
     }
-    // EXACTEMENT 3 pivots, du plus accessible au plus ambitieux
   ],
   "roadmap_90_jours": {
     "jours_1_30": {
-      "objectif": "Phrase courte sur l'objectif du premier mois",
-      "actions": ["Action concrète 1", "Action concrète 2", "Action concrète 3", "Action concrète 4"]
+      "objectif": "Phrase courte",
+      "actions": ["Action 1", "Action 2", "Action 3", "Action 4"]
     },
     "jours_31_60": {
-      "objectif": "Phrase courte sur l'objectif du deuxième mois",
-      "actions": ["Action concrète 1", "Action concrète 2", "Action concrète 3", "Action concrète 4"]
+      "objectif": "Phrase courte",
+      "actions": ["Action 1", "Action 2", "Action 3", "Action 4"]
     },
     "jours_61_90": {
-      "objectif": "Phrase courte sur l'objectif du troisième mois",
-      "actions": ["Action concrète 1", "Action concrète 2", "Action concrète 3", "Action concrète 4"]
+      "objectif": "Phrase courte",
+      "actions": ["Action 1", "Action 2", "Action 3", "Action 4"]
     }
   },
   "competences_a_acquerir": [
     {
-      "competence": "Nom de la compétence",
+      "competence": "Nom",
       "pourquoi": "1 phrase",
-      "comment": "1 phrase : ressources concrètes (formations, certifs, plateformes nommées)"
+      "comment": "1 phrase : ressources concrètes nommées"
     }
-    // EXACTEMENT 4 compétences
   ],
   "metiers_emergents": [
     {
-      "metier": "Nom du métier émergent",
-      "description": "1 phrase sur ce qu'il fait",
-      "transition_depuis_actuel": "1 phrase sur comment y passer"
+      "metier": "Nom du métier",
+      "description": "1 phrase",
+      "transition_depuis_actuel": "1 phrase"
     }
-    // EXACTEMENT 3 métiers
   ],
   "mantra_final": "Phrase forte motivante (max 20 mots)"
 }
 
+EXACTEMENT 5 actions_immediates, 3 pivots_strategiques, 4 competences_a_acquerir, 3 metiers_emergents.
+
 CONTRAINTES :
 - AUCUN texte hors JSON
 - Français professionnel, ton direct
-- Outils réels et actuels
-- Quantités EXACTES : 5 actions, 3 pivots, 4 compétences, 3 métiers émergents`;
+- Outils réels et actuels`;
 
-// =========================
-// Utils
-// =========================
 function hashIp(ip) {
   return crypto
     .createHash("sha256")
@@ -156,8 +144,14 @@ function cleanJsonResponse(raw) {
     .trim();
 }
 
-async function callClaude(prompt, metier) {
+async function callClaude(prompt, metier, label) {
+  const t0 = Date.now();
+  console.log(`[${label}] START at ${new Date().toISOString()}`);
+
   let raw = "";
+  let firstTokenTime = null;
+  let deltaCount = 0;
+
   const stream = await anthropic.messages.stream({
     model: "claude-sonnet-4-6",
     max_tokens: 3500,
@@ -169,19 +163,29 @@ async function callClaude(prompt, metier) {
     ],
   });
 
+  console.log(`[${label}] stream created after ${Date.now() - t0}ms`);
+
   for await (const event of stream) {
     if (event.type === "content_block_delta" && event.delta?.type === "text_delta") {
+      if (firstTokenTime === null) {
+        firstTokenTime = Date.now() - t0;
+        console.log(`[${label}] FIRST TOKEN at ${firstTokenTime}ms`);
+      }
       raw += event.delta.text;
+      deltaCount++;
     }
   }
+
+  const totalTime = Date.now() - t0;
+  console.log(`[${label}] DONE total=${totalTime}ms chars=${raw.length} deltas=${deltaCount}`);
 
   return cleanJsonResponse(raw);
 }
 
-// =========================
-// Handler principal
-// =========================
 export async function POST(request) {
+  const tGlobal = Date.now();
+  console.log(`[GLOBAL] POST received at ${new Date().toISOString()}`);
+
   try {
     const { metier } = await request.json();
 
@@ -193,31 +197,32 @@ export async function POST(request) {
     const ip = request.headers.get("x-forwarded-for")?.split(",")[0] || "unknown";
     const ipHash = hashIp(ip);
 
-    // === APPELS PARALLÈLES ===
+    console.log(`[GLOBAL] Starting parallel calls for "${metierClean}" at ${Date.now() - tGlobal}ms`);
+
+    // APPELS PARALLÈLES
     const [rawDiag, rawAction] = await Promise.all([
-      callClaude(PROMPT_DIAGNOSTIC, metierClean),
-      callClaude(PROMPT_ACTION, metierClean),
+      callClaude(PROMPT_DIAGNOSTIC, metierClean, "DIAG"),
+      callClaude(PROMPT_ACTION, metierClean, "ACTION"),
     ]);
 
-    // === Parsing ===
+    console.log(`[GLOBAL] Both calls done at ${Date.now() - tGlobal}ms`);
+
     let diagnostic, planAction;
     try {
       diagnostic = JSON.parse(rawDiag);
     } catch (e) {
       console.error("Diagnostic parse error:", e.message, "Raw:", rawDiag.slice(0, 400));
-      return Response.json({ error: "Erreur de génération (diagnostic). Réessaie." }, { status: 500 });
+      return Response.json({ error: "Erreur (diagnostic). Réessaie." }, { status: 500 });
     }
     try {
       planAction = JSON.parse(rawAction);
     } catch (e) {
       console.error("Action parse error:", e.message, "Raw:", rawAction.slice(0, 400));
-      return Response.json({ error: "Erreur de génération (plan d'action). Réessaie." }, { status: 500 });
+      return Response.json({ error: "Erreur (plan d'action). Réessaie." }, { status: 500 });
     }
 
-    // === Fusion ===
     const rapport = { ...diagnostic, ...planAction };
 
-    // === Validation ===
     if (
       typeof rapport.score_menace !== "number" ||
       rapport.score_menace < 0 ||
@@ -225,15 +230,14 @@ export async function POST(request) {
       !Array.isArray(rapport.actions_immediates) ||
       rapport.actions_immediates.length < 3 ||
       !Array.isArray(rapport.pivots_strategiques) ||
-      rapport.pivots_strategiques.length < 2 ||
-      !Array.isArray(rapport.taches_exposees) ||
-      rapport.taches_exposees.length < 3
+      rapport.pivots_strategiques.length < 2
     ) {
       console.error("Validation failed:", JSON.stringify(rapport).slice(0, 500));
       return Response.json({ error: "Rapport incomplet, réessaie." }, { status: 500 });
     }
 
-    // === Sauvegarde Supabase ===
+    console.log(`[GLOBAL] Saving to Supabase at ${Date.now() - tGlobal}ms`);
+
     const { data: insertData, error: insertError } = await supabase
       .from("purchases")
       .insert({
@@ -253,9 +257,11 @@ export async function POST(request) {
       return Response.json({ error: "Erreur de sauvegarde." }, { status: 500 });
     }
 
+    console.log(`[GLOBAL] DONE total=${Date.now() - tGlobal}ms purchase_id=${insertData.id}`);
+
     return Response.json({ purchase_id: insertData.id });
   } catch (error) {
-    console.error("Premium generate error:", error);
+    console.error(`[GLOBAL] Error at ${Date.now() - tGlobal}ms:`, error.message);
     return Response.json({ error: "Erreur serveur." }, { status: 500 });
   }
 }
